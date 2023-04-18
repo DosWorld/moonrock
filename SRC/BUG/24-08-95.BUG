@@ -1,0 +1,29 @@
+                                       Jelly-Bean Software Development
+                                                           24-Aug-1995
+
+                     BUG REPORT: MOONROCK COMPILER
+                            Version 0.12.b0
+
+======================================================================
+
+Concern:
+
+   "Incorrect parsing of 186+ 386+ switches in MRC.EXE"
+
+Problem:
+
+   If the "/3" switch (386+ code generation) is specified in the
+   commandline of MRC.EXE, by default this *should* also include 186+
+   instructions. This is now fixed, but still behaves incorrectly in
+   v0.12.b0.
+
+Short Term Solution:
+
+   Specify both "/3" and "/1" instead of just "/3".
+
+======================================================================
+
+Regards,
+Rowan Crowe                                          3:635/727@fidonet
+Jelly-Bean Software Development       rowan@jelly.freeway.dialix.oz.au
+

@@ -1,0 +1,12 @@
+The following sample configuration files should be present in this
+archive:
+
+mrc-asm.cfg                   ArrowSoft assembler/MrLink config (default)
+mrc-masm.cfg                  MASM/MicroSoft Link config
+mrc-tasm.cfg                  TASM/Turbo Link config
+mrc-a86.cfg                   A86 assembler config
+
+Select the appropriate config file for your preferred assembler, place
+it into the same directory as MRC.EXE, and rename the file to MRC.CFG.
+
+Use MRC-ASM.CFG if you do not have an assembler already installed.

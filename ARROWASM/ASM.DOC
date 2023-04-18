@@ -1,0 +1,395 @@
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+          
+                               THE ARROWSOFT ASSEMBLER
+                                          
+                             Public Domain Version 1.00D
+                                          
+                                          
+                                    User's Guide
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                                          
+                 The Arrowsoft Assembler Program and Manual are both
+                    Copyright (C) 1986 by Arrowsoft Systems, Inc.
+                                554 West Sixth Avenue
+                                 Larkview, MO  66069
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+          Arrowsoft Assembler v1.00                            User's Guide
+
+
+                                    INTRODUCTION
+          
+          Thank  you  for  trying  out  the  public  domain  version of our
+          Arrowsoft Assembler.  We feel that the best way to alert you, the 
+          programmer, to our fine line of professional products is  to  let
+          you use one.  Once you have experienced the high quality and ease 
+          of  use  of  this  free product, we hope that you will contact us
+          regarding our other software (our address is on the cover of this 
+          manual).  
+          
+          You will no doubt notice that this manual is not  exhaustive;  in
+          fact,  it  includes  the  least  amount of information we felt we
+          could include without robbing  the  program  of  its  usefulness.
+          There  are  two reasons for the brevity of this manual: First, we
+          have targeted professional software developers with our products, 
+          and we suspect that an  experienced  professional  will  have  no
+          trouble  figuring out how to use the Arrowsoft Assembler with the
+          information given; second, the program is, after all, free and we 
+          feel that the quality of this assembler will more that compensate 
+          you for the time you spend learning to use it.  
+          
+          Please note that this is NOT a supported product.  If you contact 
+          us, we will be happy to discuss our line of software but we  will
+          NOT answer questions about the Arrowsoft Assembler.  
+          
+          Again, we thank you for giving our product a try.  
+          
+          (NOTE: 'Microsoft' and 'Microsoft Macro Assembler' are trademarks 
+          of  Microsoft  Corporation.  'Arrowsoft', 'Arrowsoft Professional
+          Assembler' and 'Super Link' are trademarks of Arrowsoft  Systems,
+          Inc.) 
+          
+          
+          
+                                      OVERVIEW
+          
+          The  Arrowsoft Assembler takes as its input 8086, 8088, 80186 and
+          80286 assembly language source  files  and  produces  relocatable
+          object  modules  which may be linked and run under the MS-DOS and
+          PC-DOS operating systems.  The syntax of the  input  files  is  a
+          superset  of  that  accepted  by  the  Microsoft  Macro Assembler
+          (versions 3.0 and later).  In fact, most programs written for the 
+          Microsoft product should assemble without modification  with  the
+          Arrowsoft Assembler.  
+          
+          The  remaining sections of this manual will cover, in this order,
+          assembler command line options,  input  language  specifications,
+          linking  and execution of assembled object modules, and assembler
+          error messages.  
+          
+          
+          
+                          INVOKING THE ARROWSOFT ASSEMBLER
+          
+          You may run the Arrowsoft  Assembler  interactively  or  directly
+          from the   DOS   command   line.      To   invoke  the  assembler
+          interactively, simply type 
+          
+
+
+                                         -1-
+
+
+          Arrowsoft Assembler v1.00                            User's Guide
+
+
+                   asm
+          
+          at the DOS prompt and follow the ensuing instructions.    To  run
+          the assembler non-interactively, use the following syntax: 
+          
+                   asm source [,object] [,list] [,xref] [options] [;]
+          
+          where  'source'  is  a  filespec  for  the  source  file (default
+          extension .ASM), 'object' is  a  filespec  for  the  object  file
+          (default  extension  .OBJ),  'list' is a filespec for the listing
+          file (default extension .LST) and 'xref' is a  filespec  for  the
+          cross-reference  file  (default  extension  .CRF).  Note that all
+          filespecs may consist of a drive letter, a pathname,  a  filename
+          and an  extension.    If  the  object  file is not specified, the
+          assembler will use the source filename with the  .OBJ  extension.
+          If  the  list  and  cross-reference  files are not specified, the
+          assembler will not produce them.  Finally, the semicolon (;) will 
+          force the assembler to assume default values for any  unspecified
+          parameters.  
+          
+          
+          
+                                    OPTION CODES
+          
+          The options  list  consists of a sequence of option codes.  These
+          option codes consist of a slash (/) or dash (-) followed  by  one
+          or more letters, case being insignificant.  Most of these options 
+          are compatible with Microsoft conventions.  
+          
+                   /A             Write segments in alphabetical order
+                   /Bnumber       Set buffer size
+                   /Dsymbol       Define assembler symbol
+                   /E             Generate 8087/80287 emulator code
+                   /Ipath         Set 'include' search path
+                   /ML            Case sensitive internal labels
+                   /MX            Case sensitive external and public labels
+                   /MU            Convert labels to uppercase
+                   /R             Generate 8087/80287 floating point code
+                   /S             Write segments in source code order
+                   /X             Include false conditionals in listing
+                   /Z             Display error lines on screen
+          
+          
+          Many  of  these  command  line  options are self explanatory; for
+          whose which aren't, see the descriptions below: 
+          
+          
+          /B Set Buffer Size 
+          
+          Sets the size of the buffer used to hold the source  file  during
+          assembly.   The  'number'  is the number of 1K pages reserved for
+          use as a buffer.  You may  set  the  buffer  size  to  any  value
+          between  1K  and  63K;  default  buffer  size is 32K. Note that a
+          larger buffer can speed assembly of large files considerably.  
+          
+          
+          /E Generate 8087/80287 Emulator Code 
+          
+
+
+                                         -2-
+
+
+          Arrowsoft Assembler v1.00                            User's Guide
+
+
+          If you are writing programs for use with the  8087/80287  numeric
+          processor on a machine which does not have the processor, and you 
+          have  an  8087/80287  emulator  library  available, the /E option
+          directs the assembler to generate code for the emulator.  
+          
+          
+          /I Set 'include' file search paths 
+          
+          You may direct the assembler to search up to  5  directories  for
+          'include'  files  by  including  a  '/Ipath'  command for EACH of
+          them.  For example,  to  set  the  search  paths  '\bin\lib'  and
+          '\asm\lib',   include   the   following  in  your  options  list:
+          /I\bin\lib/I\asm\lib.  
+          
+          
+          /R 
+          
+          This option directs the assembler to generate floating point code 
+          for the  8087/80287  numeric  processor.    Note  that   programs
+          assembled  with  the  '/R' option will run ONLY on machines which
+          have an 8087/80287 installed.  
+          
+          
+          
+                             ARROWSOFT ASSEMBLY LANGUAGE
+          
+          As we mentioned earlier, the Arrowsoft  Assembly  Language  is  a
+          superset of the well-known Microsoft Macro Assembler Language. We 
+          modeled  our system after Microsoft's for two reasons: First, the
+          language has a flexible and moderately powerful  macro  facility;
+          second,  and for this public domain project most important, there
+          is a plethora of third-party books which explain how  to  program
+          using the  Microsoft product.  We recommend that you purchase one
+          of these guides if  you  are  not  familiar  with  8086  assembly
+          language.   If  you  would  like  to  take  advantage of the many
+          extensions to the Microsoft Language we have implemented  in  the
+          Arrowsoft Assembler, you must do one of two things: Try to figure 
+          them  out  for  yourself  (using  experimentation, disassembly or
+          anything else you can think of); or  you  can  contact  us  about
+          purchasing  the  Arrowsoft Professional Assembler, which includes
+          the complete documentation.  Again, please DO NOT CALL  us  about
+          the  Arrowsoft  Assembler;  we  will  not answer any questions or
+          provide clues as  to  how  to  access  the  assembler's  advanced
+          features.  
+          
+          
+          
+                   LINKING AND EXECUTING ARROWSOFT OBJECT MODULES
+          
+          The Arrowsoft Assembler produces relocatable object modules which 
+          are  compatible  with  the Microsoft 8086 Object Linker (versions
+          3.0 and later).   This  means  that  programs  assembled  by  the
+          Arrowsoft   Assembler   may   be   linked  with  other  Microsoft
+          Linker-compatible programs  generated  by  other  assemblers  and
+          compilers.   If  you  need  more  information  on  how to use the
+          Microsoft 8086 Object Linker, see your DOS or Microsoft  language
+          manual.  
+          
+
+
+                                         -3-
+
+
+          Arrowsoft Assembler v1.00                            User's Guide
+
+
+          By the way, we would like you to know about Arrowsofts Super Link 
+          8086/8086  Object  Link  Utility.  Super  Link  is a full-service
+          overlaying linker which is fully compatible  with  the  Microsoft
+          8086  Object  Linker,  yet  much  faster  and far more versatile.
+          Contact us at the address on the cover of this  manual  for  more
+          information.  
+          
+          
+          
+                              ASSEMBLER ERROR MESSAGES
+          
+          An  Arrowsoft  Assembler  error report consists of three parts: A
+          source file line number,  an  error  number  and  a  terse  error
+          description.   In  most  cases,  the  error messages, in spite of
+          their brevity, are self explanatory.    However,  for  those  few
+          messages  which  require  addtional  elaboration,  we  offer  the
+          following explanations: 
+          
+          
+          2 Internal error 
+          
+          This message will appear only if an  error  occurred  within  the
+          assembler itself.    If  you  see  this  message,  please send an
+          assembly listing of  the  source  file  and  any  other  relevant
+          information (DOS version, assembler version, etc.) to the address 
+          on the cover of this manual.  
+          
+          
+          68 Can't reach with segment reg 
+          
+          You have not issued the appropriate ASSUME directive.  
+          
+          
+          99 Line too long expanding <symbol> 
+          
+          Expanding  an  EQU-defined symbol would result in a line too long
+          for the assembler to handle.  Check for inadvertent recursion  in
+          the symbol.  
+          
+          
+          Out of Memory 
+          
+          Either  the source file exceeds the 64K limit of the assembler or
+          the symbol table exceeds  its  allocation.    If  this  condition
+          occurs,  try  assembling without creating list or cross-reference
+          files.  If this doesn't work, try dividing your source code  into
+          several smaller source files and assembling them separately.  The 
+          resulting code  may  then be linked with a link utility.  (Again,
+          we can't resist pointing  out  that  the  Arrowsoft  Professional
+          Assembler  uses ALL available memory for the assembly process; in
+          fact, it will assemble a file of arbitrary  size,  regardless  of
+          memory limitations.) 
+          
+          
+          Internal Error 
+          
+          See the explanation for error number 2 above.  
+          
+
+
+                                         -4-
+
+
+          Arrowsoft Assembler v1.00                            User's Guide
+
+
+          
+          
+                        THE ARROWSOFT PROFESSIONAL ASSEMBLER
+          
+          Our  real reason for giving you this program free of charge is to
+          encourage you to purchase our commercial product,  the  Arrowsoft
+          Professional Assembler. The program you have now differs from the 
+          full   program  in  only  three  respects:  (1)  It  includes  no
+          documentation  for  those  language  features  which  extend  the
+          Microsoft  Macro Assembly Language (although they are implemented
+          by the public domain version); (2) the maximum input file size is 
+          limited to 64K bytes; and (3) it is not supported via our 24 hour 
+          toll-free help line (in fact, it is not supported at all by  us).
+          With these 3 exceptions, the program you now have is identical to 
+          the Professional Assembler.  
+          
+          If  you  decide you'd like to purchase the Arrowsoft Professional
+          Assembler, send a postcard requesting our catalog to the  address
+          on the  cover  of  this  manual.    Our catalog will show you our
+          entire line of professional  software  development  products  and
+          will  convince you that our quality and prices are as competitive
+          as you will find anywhere.  
+          
+          
+          
+                           CONCLUDING REMARKS AND CREDITS
+          
+          Again, we would like to thank you for trying  our  product.    We
+          hope  that  the  remarks  we've  made  concerning our programming
+          products (Arrowsoft Professional Assembler and  Super  Link  8086
+          Object  Linker)  have  piqued  your  curiosity enough that you'll
+          write to us for more information.  Further, we hope that actually 
+          using one of our products has convinced you of our dedication  to
+          quality and  performance.  Finally, we hope to welcome you to our
+          growing family of satisfied customers.  
+          
+          Even if you don't buy anything from us, you can do  us  a  favor.
+          We  want you to distribute this product to all of your friends by
+          any means possible.  You may post it to bulletin boards, offer it 
+          through your computer club or just copy it and  pass  it  around.
+          We  only  ask that (1) you charge nothing for the software beyond
+          reasonable copying and disk costs and (2) that you distribute the 
+          two  files   (ASM.EXE   and   ASM.DOC)   together   and   without
+          modification.  
+          
+          The  Arrowsoft Assembler was written by Kaplan 'Kap' Morovitz and
+          tested by the programming staff at Arrowsoft. Since 'Kap'  writes
+          only  in assembly language and C, this manual was written by Stan
+          Goldwyn-Benton.  
+
+
+
+
+
+
+
+
+
+
+
+                                         -5-
+
+

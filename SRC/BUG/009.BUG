@@ -1,0 +1,67 @@
+Sun 28-May-1995
+
+. Command in form a&=a&+90 had extra add when compiled, resulting in
+  incorrect result.
+
+. For/next incorrectly used __var instead of w_VAR d_VAR etc.
+
+. a&=a&-something was not implemented.
+
+. Subtraction gets confused with negative constants, eg: a& = b& - 2
+  a negative constant is now only assumed if (bp-1) is a TermType, eg:
+        a%  =  -1
+    bp: 0   1   2
+
+
+Mon 29-May-1995
+
+. Some severe memory allocation bugs fixed.
+
+. If bp(2) was a StringConst%, MRC called _str_copy instead of _str_cs_es
+
+. var1 = var1 + var2 output optimised:
+     mov ax, var1 / add ax, var2 / mov var1, ax
+                    optimised to
+           mov ax, var2 / add var1, ax
+
+. Sequential string operations optimised: if a string pointer is needed
+  and it is already in DI it will be used rather than loading from memory.
+
+
+Tue 30-May-1995
+
+. 32 bit numerical compare implemented, eg:
+    if a&<=87891 then
+     ...
+
+. 32 bit negative constants were not correctly split into 16 bit
+  numbers; the high word was not negative.
+
+. Added 32 bit multiplication
+
+
+Mon 12-Jun-1995
+
+. Added end of file checking for file reads.
+
+. Corrected parameters for _file_create; file modes were being passed
+  instead of file attributes.
+
+. The MID function had its last optional parameter passed incorrectly.
+
+. Optimising variable not correctly killed with print statement,
+  resulting in strange "optimisations".
+
+
+Wed 14-Jun-1995
+
+. FINDFIRST function did not free string constant correctly, resulting
+  in an unbalanced stack. Possible problems: running out of dynamic
+  memory, or complete program crash.
+
+
+Thu 15-Jun-1995
+
+. The FALSE constant was incorrectly replaced with -1 instead of 0 in
+  some cases.
+

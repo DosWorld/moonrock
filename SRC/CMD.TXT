@@ -1,0 +1,43 @@
+Undocumented (as yet) MoonRock commands and changes:
+====================================================
+
+
+; add SUB to code section of docs
+mod
+extern
+mytick
+type
+int86, int86x
+memsetw, memsetb
+farmemsetw, farmemsetb
+; do for ...to...STEP
+; string type in pointer def
+#ifdef
+#ifndef
+#endif
+#out
+#abort
+codeptr
+mfosinit
+mfoscarrier
+mfosdatawaiting
+mfosdeinit
+mfosflushout
+mfosgetchar
+mfostx
+isleapyear
+drawlinex
+; optimisations
+drawline    ; credit
+freadfar
+; Use ASM.EXE & MRLINK instead of A86    û
+; clarify MCURSOR is x,y based and 0,0 based û
+abs
+keystatus
+setgraphseg
+getgraphseg
+microdelay
+putpixel   ; credit
+getpixel   ; credit
+setgraphmode
+gcls

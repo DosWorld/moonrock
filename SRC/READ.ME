@@ -1,0 +1,143 @@
+    ================================================================
+    NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+
+    If you did not use the -d option when unZIPping this file, then
+    delete this directory and start again. Suggested commandline is:
+
+        pkunzip -d mrsrc017 c:\mr\
+
+    NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
+    ================================================================
+
+
+
+
+
+
+         == MOONROCK COMPILER PUBLIC DOMAIN SOURCE RELEASE ==
+
+                     - Friday 5th April 1996 -
+
+This is a MoonRock compiler source code release, free for personal use.
+There is no charge for this source. If you are looking for the latest
+*compiler release* of MoonRock, the filename is typically MOONxxx.ZIP,
+where xxx is the version.
+
+It is far more preferable to notify the author of suggestions for
+changes to the code, rather than distribute modified copies yourself. To
+have two or more developers working independently on the same program is
+merely counterproductive.
+
+THE AUTHOR PROVIDES NO IMPLIED WARRANTY FOR THIS SOURCE CODE, OR ANY
+MODIFICATIONS MADE BY OTHERS.
+
+COMMERCIAL USE OF THIS SOURCE CODE IS SPECIFICALLY PROHIBITED!!
+
+
+* Quick list of requirements:
+
+    A recent MoonRock compiler release archive (generally MOONxxx.ZIP
+      where xxx is the version)
+
+    MicroSoft Visual BASIC for MS-DOS Standard version 1.0
+                          OR
+    MicroSoft QuickBASIC for MS-DOS version 4.5 (earlier versions may
+      also work)
+
+    An assembler is also desirable. One is supplied with the MoonRock
+      release archive.
+
+
+* As supplied, the source will run in either the QuickBASIC or VB/DOS
+  IDEs. Each have their respective BATs (QB.BAT and VBDOS.BAT), and
+  QLBs (MRVB.QLB and MRQB.QLB).
+
+  However, you can only compile with VB/DOS, as QuickBASIC is too memory
+  limited. It may be possible to separate some of the functions into
+  further modules and create the compiler using QB only, but you will
+  run out of memory fast when you invoke the executable you've just
+  created. Unless you wish to be disappointed, I do not suggest you
+  bother trying this.
+
+  MoonRock will NOT run with QBasic (the one supplied with DOS).
+
+  It may be possible to compile this source with PDS, if you can force
+  all strings to be far. Some of the ASM functions may need to be
+  modified slightly. I do not have PDS so I have not tried this.
+
+
+* MoonRock is large. Some system configurations may not have enough
+  memory to run it within the IDE. With about 620-630k free I can just
+  squeeze in a DOS shell, but sometimes run out of memory.
+
+
+* To compile to an executable, run MRBUILD.BAT. Note that I have renamed
+  my VB/DOS compiler VBC.EXE, and my VB/DOS linker VLINK.EXE, to avoid
+  clashes with the QB equivalents. You may need to modify MRBUILD.BAT
+  slightly.
+
+
+* It's a good idea to keep all of the MoonRock source code in a
+  directory called C:\MR with LIB\, QBLIB\, VBLIB\ etc hanging off it.
+  Wherever possible I have not used paths, but some parts of the code
+  may refer to C:\MR.
+
+
+* Take care if you edit any of the MR*.BAS files with a text editor.
+  Some of them contain embedded TABs which may be expanded to spaces by
+  your editor -- this will ruin the source. By using the QuickBASIC or
+  VB/DOS IDE you can bypass this problem.
+
+
+* Most of the ASM source code in VBLIB\ and QBLIB\ can only be assembled
+  by the A86 assembler, which is generally available as A86Vxxx.* where
+  xxx is the version. To assemble, the following command line is used
+  (example, FFEXIST.ASM):
+
+      a86 +o ffexist.asm
+
+  This will create FFEXIST.OBJ.
+
+
+* To recreate the "quick" libraries (for use with the IDE), run the
+  following:
+
+      link @vbqlb.lnk
+            OR
+      link @qbqlb.lnk
+
+
+* To create MoonRock's ASM library, which is required whenever a change is made
+  to any ASM file in LIB\, run COMBINE.BAT. This creates MOONROCK.ALB
+  and MOONROCK.PTR.
+
+
+* A very early beta of the newer version of MoonRock is included as a
+  teaser to whet your appetite, in MM\. This is a complete rewrite of
+  the compiler, and is compiled by MoonRock itself.
+
+  It is not fully functional, but it has the ability to evaluate complex
+  expressions, so long as they can be split into discrete simplistic
+  expressions. A couple of simple programs are supplied.
+
+
+* Finally, the source is incredibly messy in parts. ("ALL of it is
+  messy!" screams a voice inside Ro's head). I do not document my code
+  well, and some uses of variable names etc may be confusing. The
+  compiler algorithm itself is simplistic. Some parts are optimized for
+  speed rather than readability. Some parts may be redundant (never
+  executed) but they are there because the compiler has become so
+  complex I am wary of making major changes, lest they have an
+  undesirable affect on other parts of the code.
+
+  In no way does the author agree to necessarily support future releases
+  of the compiler, or source code.
+
+
+I hope you can make good use of this source code.
+
+ _--_|\
+/      \  Jelly-Bean Software Development      Rowan Crowe, 3:635/727.1@fidonet
+\_.--.*/  Melbourne, Victoria, AUSTRALIA       rowan@jelly.freeway.DIALix.oz.au
+      v
+

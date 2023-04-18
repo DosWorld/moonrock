@@ -1,0 +1,48 @@
+                                       Jelly-Bean Software Development
+                                                           10-Sep-1995
+
+                     BUG REPORT: MOONROCK COMPILER
+                            Version 0.13.b0
+
+======================================================================
+
+Concern:
+
+   "Non freeing of memory with fexist"
+
+Problem:
+
+   If a string constant is passed to fexist, the memory is not freed.
+   While this is reasonably harmless (unless fexist is called several
+   times), it causes the stack to become misaligned due to a PUSH
+   without a corresponding POP. If this is used in a subroutine then the
+   return address will be incorrect and your program may crash totally.
+
+Short Term Solution:
+
+   To work around this problem, whenever you use fexist with a
+   string constant as the filespec, eg:
+
+     a% = fexist("c:/command.com", 7)
+
+   Add these two lines *immediately* after the fexist line:
+
+     @pop bx
+     @call _mem_free
+
+   This will free the memory, and realign the stack.
+
+                             OR
+
+   Simply avoid using a string constant; assign the filespec to a
+   variable, eg:
+
+     tmp$ = "c:/command.com"
+     a% = fexist(tmp$, 7)
+
+======================================================================
+
+Regards,
+Rowan Crowe                                          3:635/727@fidonet
+Jelly-Bean Software Development       rowan@jelly.freeway.dialix.oz.au
+

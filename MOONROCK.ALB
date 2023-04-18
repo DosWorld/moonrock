@@ -1,0 +1,7148 @@
+; This file contains library procedures and functions from the MoonRock
+; language and compiler.
+;
+; Most of this code was written by Rowan Crowe. Full source with
+; comments is available from several sites (including the internet site
+; below).
+;
+; Rowan Crowe, 3:635/728@fidonet
+; rowan@sensation.net.au
+; http://www.rowan.sensation.net.au/moonrock.html
+; =====================================================================
+
+_finput:
+%allocate mr@fbuf 30
+%allocate mr@fpos 30
+%allocate mr@finputeof 30
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	si
+	push	bp
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	bp,bx
+	mov	di,bx
+	shl	di,1
+	mov	si,word ptr ds:[mr@fbuf+di]
+	or	si,si
+	jz	I8
+I1:
+	cmp	word ptr ds:[mr@finputeof+di],-1
+	jnz	I2
+	xor	di,di
+	jmp	I6
+I2:
+	add	si,word ptr ds:[mr@fpos+di]
+	mov	cx,1024
+	sub	cx,word ptr ds:[mr@fpos+di]
+	jcxz	I9
+	mov	di,si
+	mov	bx,cx
+	mov	al,13
+	repnz	scasb
+	jnz	I9
+	sub	bx,cx
+	mov	cx,bx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+#S	add	di,2
+@S	inc	di
+@S	inc	di
+	xor	dx,dx
+	push	cx
+I3:
+	jcxz	I5
+	lodsb
+	cmp	al,9
+	jz	I4
+	cmp	al,32
+	jb	I7
+I4:
+	inc	dx
+	stosb
+	loop	I3
+I5:
+	pop	cx
+	pop	di
+	mov	[di],dx
+	mov	bx,bp
+	shl	bx,1
+	add	word ptr ds:[mr@fpos+bx],cx
+I6:
+#Z	pop	es
+	pop	bp
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I7:
+	loop	I3
+	jmp	short I5
+I8:
+	push	di
+	mov	bx,1024
+	call	_mem_alloc
+	mov	si,di
+	pop	di
+	mov	word ptr ds:[mr@fpos+di],1024
+	mov	word ptr ds:[mr@fbuf+di],si
+I9:
+	mov	bx,bp
+	shl	bx,1
+	cmp	word ptr ds:[mr@finputeof+bx],-1
+	jz	I13
+	push	di
+	mov	di,word ptr ds:[mr@fbuf+bx]
+	push	di
+	mov	si,di
+	add	si,word ptr ds:[mr@fpos+bx]
+	mov	cx,1024
+	sub	cx,word ptr ds:[mr@fpos+bx]
+	mov	dx,word ptr ds:[mr@fbuf+bx]
+	add	dx,cx
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+	mov	ah,3fh
+	mov	cx,word ptr ds:[mr@fpos+bx]
+	mov	si,cx
+	mov	word ptr ds:[mr@fpos+bx],0
+	mov	bx,bp
+	int	21h
+	or	ax,ax
+	jz	I11
+	cmp	ax,si
+	jb	I12
+I10:
+	pop	si
+	pop	di
+	mov	di,bp
+	shl	di,1
+	jmp	I1
+I11:
+	mov	si,bp
+	shl	si,1
+	mov	word ptr ds:[mr@finputeof+si],-1
+	mov	bx,word ptr ds:[mr@fbuf+si]
+	call	_mem_free
+	mov	word ptr ds:[mr@fbuf+si],0
+	jmp	short I10
+I12:
+	mov	di,dx
+	add	di,ax
+	mov	cx,si
+	sub	cx,ax
+	dec	cx
+	mov	al,13
+	stosb
+	xor	al,al
+@S	rep	stosb
+#S	shr	cx,1
+#S	rep	stosw
+#S	adc	cx,cx
+#S	rep	stosb
+	jmp	short I10
+I13:
+	mov	ax,8
+$errhandler
+_finputraw:
+%allocate mr@fbuf 30
+%allocate mr@fpos 30
+%allocate mr@finputeof 30
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	si
+	push	bp
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	bp,bx
+	mov	di,bx
+	shl	di,1
+	mov	si,word ptr ds:[mr@fbuf+di]
+	or	si,si
+	jz	I21
+I14:
+	cmp	word ptr ds:[mr@finputeof+di],-1
+	jnz	I15
+	xor	di,di
+	jmp	I19
+I15:
+	add	si,word ptr ds:[mr@fpos+di]
+	mov	cx,1024
+	sub	cx,word ptr ds:[mr@fpos+di]
+	jcxz	I22
+	mov	di,si
+	mov	bx,cx
+	mov	al,13
+	repnz	scasb
+	jnz	I22
+	sub	bx,cx
+	mov	cx,bx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+#S	add	di,2
+@S	inc	di
+@S	inc	di
+	xor	dx,dx
+	push	cx
+I16:
+	jcxz	I18
+	lodsb
+	cmp	al,10
+	jz	I20
+I17:
+	inc	dx
+	stosb
+	loop	I16
+I18:
+	pop	cx
+	pop	di
+	mov	[di],dx
+	mov	bx,bp
+	shl	bx,1
+	add	word ptr ds:[mr@fpos+bx],cx
+I19:
+#Z	pop	es
+	pop	bp
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I20:
+	loop	I16
+	jmp	short I18
+I21:
+	push	di
+	mov	bx,1024
+	call	_mem_alloc
+	mov	si,di
+	pop	di
+	mov	word ptr ds:[mr@fpos+di],1024
+	mov	word ptr ds:[mr@fbuf+di],si
+I22:
+	mov	bx,bp
+	shl	bx,1
+	cmp	word ptr ds:[mr@finputeof+bx],-1
+	jz	I26
+	push	di
+	mov	di,word ptr ds:[mr@fbuf+bx]
+	push	di
+	mov	si,di
+	add	si,word ptr ds:[mr@fpos+bx]
+	mov	cx,1024
+	sub	cx,word ptr ds:[mr@fpos+bx]
+	mov	dx,word ptr ds:[mr@fbuf+bx]
+	add	dx,cx
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+	mov	ah,3fh
+	mov	cx,word ptr ds:[mr@fpos+bx]
+	mov	si,cx
+	mov	word ptr ds:[mr@fpos+bx],0
+	mov	bx,bp
+	int	21h
+	or	ax,ax
+	jz	I24
+	cmp	ax,si
+	jb	I25
+I23:
+	pop	si
+	pop	di
+	mov	di,bp
+	shl	di,1
+	jmp	I14
+I24:
+	mov	si,bp
+	shl	si,1
+	mov	word ptr ds:[mr@finputeof+si],-1
+	mov	bx,word ptr ds:[mr@fbuf+si]
+	call	_mem_free
+	mov	word ptr ds:[mr@fbuf+si],0
+	jmp	short I23
+I25:
+	mov	di,dx
+	add	di,ax
+	mov	cx,si
+	sub	cx,ax
+	dec	cx
+	mov	al,13
+	stosb
+	xor	al,al
+@S	rep	stosb
+#S	shr	cx,1
+#S	rep	stosw
+#S	adc	cx,cx
+#S	rep	stosb
+	jmp	short I23
+I26:
+	mov	ax,8
+$errhandler
+_mem_alloc:
+	push	ax
+	push	bx
+	push	si
+	test	bx,1
+	jz	I27
+	inc	bx
+I27:
+	mov	di,$StartOfDynamic
+I28:
+	cmp	byte ptr [di],'R'
+	jnz	I32
+	cmp	byte ptr [di+1],'F'
+	jz	I30
+I29:
+	mov	di,[di+6]
+	or	di,di
+	jnz	I28
+	mov	ax,5
+$errhandler
+I30:
+	cmp	[di+2],bx
+	jb	I29
+	mov	word ptr [di],'AR'
+	mov	[di+2],bx
+	lea	si,[di+bx+16]
+	cmp	si,[di+6]
+	ja	I31
+	lea	si,[di+bx+8]
+	mov	word ptr [si],'FR'
+	mov	ax,[di+6]
+	sub	ax,si
+	sub	ax,8
+	mov	[si+2],ax
+	mov	[si+4],di
+	mov	ax,[di+6]
+	mov	[si+6],ax
+	mov	bx,[di+6]
+	mov	[bx+4],si
+	mov	[di+6],si
+I31:
+	add	di,8
+	pop	si
+	pop	bx
+	pop	ax
+	ret
+I32:
+	mov	ax,1
+$errhandler
+_mem_free:
+	or	bx,bx
+	jz	I35
+	push	ax
+	push	bx
+	push	si
+	push	di
+	sub	bx,8
+	cmp	word ptr [bx],'AR'
+	jnz	I36
+	mov	word ptr [bx],'FR'
+	mov	si,[bx+4]
+	mov	di,[bx+6]
+	or	si,si
+	jz	I33
+	cmp	word ptr [si],'FR'
+	jnz	I33
+	mov	ax,[bx+2]
+	add	ax,8
+	add	[si+2],ax
+	mov	[si+6],di
+	mov	[di+4],si
+	mov	word ptr [bx],'fr'
+	mov	bx,si
+I33:
+	or	di,di
+	jz	I34
+	cmp	word ptr [di],'FR'
+	jnz	I34
+	mov	ax,[di+2]
+	add	ax,8
+	add	[bx+2],ax
+	mov	ax,[di+6]
+	mov	[bx+6],ax
+	mov	word ptr [di],'fr'
+I34:
+	pop	di
+	pop	si
+	pop	bx
+	pop	ax
+I35:
+	ret
+I36:
+	mov	ax,2
+$errhandler
+_sub_cleanup:
+	xor	ax,ax
+I37:
+	mov	di,cs:[si]
+	or	di,di
+	jz	I39
+	mov	bx,[di]
+	mov	[di],ax
+	or	bx,bx
+	jz	I38
+	call	_mem_free
+I38:
+	add	si,2
+	jmp	short I37
+I39:
+	ret
+_str_release:
+%allocate mr@markptr 2
+%allocate mr@marklist 30
+	push	bx
+	push	cx
+	push	si
+	mov	cx,word ptr ds:[mr@markptr]
+	jcxz	I43
+	shr	cx,1
+	mov	si,offset mr@marklist
+I40:
+	mov	bx,ds:[si]
+	or	bx,bx
+	jz	I41
+	call	_mem_free
+	jcxz	I42
+I41:
+@S	inc	si
+@S	inc	si
+#S	add	si,2
+	loop	I40
+I42:
+	mov	word ptr ds:[mr@markptr],cx
+I43:
+	pop	si
+	pop	cx
+	pop	bx
+	ret
+_premalloc:
+	push	bp
+	mov	bp,sp
+	push	bx
+	push	di
+	mov	bx,[bp+4]
+	xor	ax,ax
+	mov	di,$StartOfDynamic
+I44:
+	cmp	byte ptr [di],'R'
+	jnz	I48
+	cmp	byte ptr [di+1],'F'
+	jnz	I45
+	cmp	[di+2],bx
+	jae	I47
+I45:
+	mov	di,[di+6]
+	or	di,di
+	jnz	I44
+I46:
+	pop	di
+	pop	bx
+	pop	bp
+	ret	2
+I47:
+	mov	ax,bx
+	jmp	short I46
+I48:
+	mov	ax,1
+$errhandler
+_msize:
+	push	bp
+	mov	bp,sp
+	mov	bx,[bp+4]
+	cmp	word ptr [bx],'RA'
+	jnz	I50
+	mov	ax,word ptr [bx+2]
+I49:
+	pop	bx
+	pop	bp
+	ret
+I50:
+	mov	ax,-1
+	jmp	I49
+_mem_usage:
+	push	ax
+	push	di
+	mov	di,$StartOfDynamic
+	xor	bx,bx
+	xor	cx,cx
+I51:
+	cmp	byte ptr [di],'R'
+	jnz	I54
+	cmp	byte ptr [di+1],'F'
+	jnz	I52
+	mov	ax,[di+2]
+	add	bx,ax
+	cmp	ax,cx
+	ja	I53
+I52:
+	mov	di,[di+6]
+	or	di,di
+	jnz	I51
+	pop	di
+	pop	ax
+	ret
+I53:
+	mov	cx,ax
+	jmp	short I52
+I54:
+	mov	ax,1
+$errhandler
+_mem_usage_total_ax:
+	call	_mem_usage
+	mov	ax,bx
+	ret
+_mem_usage_total_bx:
+	jmp	_mem_usage
+%include _mem_usage
+_mem_usage_largest_ax:
+	call	_mem_usage
+	mov	ax,cx
+	ret
+_mem_usage_largest_bx:
+	call	_mem_usage
+	mov	bx,cx
+	ret
+_mem_usage_dump:
+	push	ax
+	push	bx
+	push	cx
+	push	ds
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	ah,2
+	mov	dl,13
+	int	21h
+	mov	dl,10
+	int	21h
+	mov	di,$StartOfDynamic
+	xor	bx,bx
+	xor	cx,cx
+	mov	word ptr cs:[mr@freeb],bx
+	mov	word ptr cs:[mr@allocb],bx
+I55:
+	push	bx
+	mov	bx,di
+	call	_hex16_con
+	pop	bx
+	cmp	byte ptr [di+1],'A'
+	jnz	I56
+	call	_cprint
+	db	' ',' USED',0
+	jmp	I58
+I56:
+	cmp	byte ptr [di+1],'F'
+	jnz	I57
+	call	_cprint
+	db	' ',' FREE',0
+	jmp	I58
+I57:
+	call	_cprint
+	db	' ',' ????',0
+I58:
+	call	_cprint
+	db	' ',' Len=',0
+	push	bx
+	mov	bx,[di+2]
+	call	_hex16_con
+	call	_cprint
+	db	' ',' Prev=',0
+	mov	bx,[di+4]
+	call	_hex16_con
+	call	_cprint
+	db	' Forward=',0
+	mov	bx,[di+6]
+	call	_hex16_con
+	call	_cprint
+	db	13,10,0
+	pop	bx
+	mov	dl,32
+	cmp	byte ptr [di+1],'F'
+	jz	I59
+	inc	bx
+	mov	ax,[di+2]
+	add	word ptr cs:[mr@freeb],ax
+	jmp	short I60
+I59:
+	inc	cx
+	mov	ax,[di+2]
+	add	word ptr cs:[mr@allocb],ax
+	push	cx
+	push	di
+	mov	cx,ax
+	xor	ax,ax
+	add	di,8
+	rep	stosb
+	pop	di
+	pop	cx
+I60:
+	mov	di,[di+6]
+	or	di,di
+	jz	I61
+	jmp	I55
+I61:
+	push	ds
+	push	cs
+	pop	ds
+	push	cx
+	call	_cprint
+	db 13,10,'Alloc: ',0
+	mov	ax,bx
+	call	_err_wordu
+	mov	ah,2
+	mov	dl,'/'
+	int	21h
+	mov	ax,word ptr cs:[mr@freeb]
+	call	_err_wordu
+	call	_cprint
+	db 13,10,'Free: ',' ',0
+	pop	ax
+	call	_err_wordu
+	mov	ah,2
+	mov	dl,'/'
+	int	21h
+	mov	ax,word ptr cs:[mr@allocb]
+	call	_err_wordu
+	pop	ds
+#Z	pop	es
+	pop	di
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I62:
+	mov	ax,1
+$errhandler
+	mr@freeb: dw ?
+	mr@allocb: dw ?
+_memchk:
+	push	ax
+	push	di
+	mov	di,$StartOfDynamic
+I63:
+	cmp	byte ptr [di],'R'
+	jnz	I64
+	mov	di,[di+6]
+	or	di,di
+	jnz	I63
+	pop	di
+	pop	ax
+	ret
+I64:
+	mov	ax,1
+$errhandler
+_seg2huge:
+	xor	dx,dx
+		mov	cx,4
+I65:
+		clc
+		rcl	ax,1
+		rcl	dx,1
+	loop	short I65
+	ret
+_huge2seg:
+	push	ax
+	mov	ax,es
+@1	push	cx
+@1	mov	cl,12
+@1	shl	ax,cl
+@1	pop	cx
+#1	shl	ax,12
+	mov	es,ax
+	pop	ax
+	ret
+_arraycalc_byte_l:
+	push	bp
+	mov	bp,sp
+	push	cx
+	push	dx
+	mov	dx,[bp+4]
+	mov	bp,[bp]
+@1	mov	cl,12
+@1	shl	dx,cl
+#1	shl	dx,12
+	mov	cx,es
+	add	cx,dx
+	mov	es,cx
+	pop	dx
+	pop	cx
+	add	sp,2
+	ret	2
+_arraycalc_word_l:
+	push	bp
+	mov	bp,sp
+	push	cx
+	push	dx
+	mov	dx,[bp+4]
+	mov	bp,[bp]
+	clc
+	rcl	bp,1
+	rcl	dx,1
+@1	mov	cl,12
+@1	shl	dx,cl
+#1	shl	dx,12
+	mov	cx,es
+	add	cx,dx
+	mov	es,cx
+	pop	dx
+	pop	cx
+	add	sp,2
+	ret	2
+_arraycalc_dword_l:
+	push	bp
+	mov	bp,sp
+	push	cx
+	push	dx
+	mov	dx,[bp+4]
+	mov	bp,[bp]
+	clc
+	rcl	bp,1
+	rcl	dx,1
+	clc
+	rcl	bp,1
+	rcl	dx,1
+@1	mov	cl,12
+@1	shl	dx,cl
+#1	shl	dx,12
+	mov	cx,es
+	add	cx,dx
+	mov	es,cx
+	pop	dx
+	pop	cx
+	add	sp,2
+	ret	2
+_arraycalc_word:
+	push	cx
+	push	dx
+	xor	dx,dx
+@1	mov	cl,12
+@1	shl	dx,cl
+#1	shl	dx,12
+	mov	cx,es
+	add	cx,dx
+	mov	es,cx
+	pop	dx
+	pop	cx
+	ret
+_arraycalc_dword:
+	push	cx
+	push	dx
+	xor	dx,dx
+	clc
+	rcl	bp,1
+	rcl	dx,1
+	clc
+	rcl	bp,1
+	rcl	dx,1
+@1	mov	cl,12
+@1	shl	dx,cl
+#1	shl	dx,12
+	mov	cx,es
+	add	cx,dx
+	mov	es,cx
+	pop	dx
+	pop	cx
+	ret
+_fardimsetup:
+	mov	si,offset mr@FarDimList
+I66:
+	mov	ah,48h
+	mov	bx,cs:[si]
+	or	bx,bx
+	jz	short I68
+	add	si,2
+	int	21h
+	jnc	I67
+	jmp	_InitErr
+I67:
+	mov	di,cs:[si]
+	add	si,2
+	mov	ds:[di],ax
+	jmp	short I66
+I68:
+	xor	ax,ax
+	ret
+_exec:
+%allocate execp_env 2
+%allocate execp_cmd 4
+%allocate execp_fc1 2
+%allocate execp_fc2 2
+#R	mov	word ptr ss:[_errcode],0
+#1	pusha
+@1	push	bx
+@1	push	cx
+@1	push	dx
+@1	push	bp
+@1	push	si
+@1	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	bp,di
+	clc
+	xor	al,al
+	call	_str_2_asciiz
+	push	di
+	mov	dx,di
+	mov	si,bp
+	mov	cx,ds:[si]
+	mov	bx,cx
+	add	bx,4
+	call	_mem_alloc
+	push	di
+	lodsw
+	mov	al,cl
+	add	al,2
+	stosb
+	mov	al,' '
+	stosb
+	rep	movsb
+	mov	word ptr ds:[di],13
+	pop	di
+	push	di
+	mov	word ptr ds:[execp_cmd],di
+	mov	word ptr ds:[execp_cmd+2],ds
+	xor	ax,ax
+	mov	word ptr ds:[execp_env],ax
+	mov	word ptr ds:[execp_fc1],ax
+	mov	word ptr ds:[execp_fc2],ax
+	mov	ax,4b00h
+	mov	bx,offset execp_env
+	int	21h
+	pop	bx
+	pop	cx
+	pushf
+	call	_mem_free
+	mov	bx,cx
+	call	_mem_free
+	popf
+	jc	I70
+	mov	ah,4dh
+	int	21h
+I69:
+#Z	pop	es
+#1	popa
+@1	pop	di
+@1	pop	si
+@1	pop	bp
+@1	pop	dx
+@1	pop	cx
+@1	pop	bx
+	ret
+I70:
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I69
+@R	jmp	_err_dos
+@R%include _err_dos
+_microdelay:
+	push	ax
+	push	cx
+	push	dx
+	mov	al,0
+	out	43h,al
+	in	al,61h
+	in	al,40h
+	mov	ah,al
+	in	al,61h
+	in	al,40h
+	xchg	al,ah
+	mov	cx,ax
+	sub	ax,bx
+	mov	dx,ax
+I71:
+	mov	al,0
+	out	43h,al
+	in	al,61h
+	in	al,40h
+	mov	ah,al
+	in	al,61h
+	in	al,40h
+	xchg	al,ah
+	cmp	ax,cx
+	ja	I72
+	cmp	ax,dx
+	ja	I71
+I72:
+	pop	dx
+	pop	cx
+	pop	ax
+	ret
+_delay:
+	push	bp
+	mov	bp,sp
+	sub	sp,4
+	push	ax
+	push	cx
+	push	dx
+	push	si
+	push	di
+	mov	ah,0
+	int	1ah
+	add	dx,bx
+	adc	cx,0
+	mov	si,dx
+	mov	di,cx
+	sub	dx,bx
+	sbb	cx,0
+	mov	[bp-2],dx
+	mov	[bp-4],cx
+I73:
+	mov	ah,0
+	int	1ah
+	cmp	cx,di
+	jnz	short I74
+	cmp	dx,si
+I74:
+	jae	short I76
+	cmp	cx,[bp-4]
+	jnz	short I75
+	cmp	dx,[bp-2]
+I75:
+	jb	short I76
+	call	_timeslice
+	jmp	short I73
+I76:
+	pop	dx
+	pop	cx
+	pop	ax
+	mov	sp,bp
+	pop	bp
+	ret
+_microtime:
+		mov	al,00h
+	pushf
+	cli
+	out	043h,al
+	call	_nullproc
+		in	al,40h
+		mov	bl,al
+	call	_nullproc
+		in	al,40h
+	popf
+		mov	bh,al
+		not	bx
+		mov	ax,bx
+	ret
+_nullproc:
+	ret
+_int86:
+%allocate i86bp 2
+	push	bp
+	mov	bp,sp
+	sub	sp,4
+	pushf
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	si
+	push	di
+	push	es
+	mov	al,[bp+8]
+	mov	byte ptr cs:[I78],al
+	mov	di,[bp+6]
+	mov	ax,[di]
+	mov	bx,[di+2]
+	mov	cx,[di+4]
+	mov	dx,[di+6]
+	mov	si,[di+10]
+	push	bp
+	mov	bp,[di+8]
+	mov	di,[di+12]
+	push	ds
+	jmp	short I77
+I77:
+	push	word ptr [di+14]
+	popf
+	db	0cdh
+I78:
+	db	?
+	pop	ds
+	mov	word ptr ds:[i86bp],bp
+	pop	bp
+	pushf
+	pop	word ptr [bp-2]
+	mov	word ptr [bp-4],di
+	mov	di,[bp+4]
+	mov	[di],ax
+	mov	[di+2],bx
+	mov	[di+4],cx
+	mov	[di+6],dx
+	mov	ax,ds:[i86bp]
+	mov	[di+8],ax
+	mov	[di+10],si
+	mov	ax,[bp-4]
+	mov	[di+12],ax
+	mov	ax,[bp-2]
+	mov	[di+14],ax
+	pop	es
+	pop	di
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	popf
+	mov	sp,bp
+	pop	bp
+	ret	6
+_int86x:
+%allocate i86bp 2
+	push	bp
+	mov	bp,sp
+	sub	sp,4
+	pushf
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	si
+	push	di
+	push	es
+	mov	al,[bp+8]
+	mov	byte ptr cs:[I80],al
+	mov	di,[bp+6]
+	mov	ax,[di+12]
+	mov	word ptr cs:[i86xdi],ax
+	mov	ax,[di]
+	mov	bx,[di+2]
+	mov	cx,[di+4]
+	mov	dx,[di+6]
+	mov	si,[di+10]
+	push	bp
+	mov	bp,[di+8]
+	mov	es,[di+18]
+	push	ds
+	mov	ds,[di+16]
+	mov	di,cs:[i86xdi]
+	jmp	short I79
+I79:
+	push	word ptr [di+14]
+	popf
+	db	0cdh
+I80:
+	db	?
+	mov	word ptr cs:[i86xds],ds
+	pop	ds
+	mov	word ptr ds:[i86bp],bp
+	pop	bp
+	pushf
+	pop	word ptr [bp-2]
+	mov	word ptr [bp-4],di
+	mov	di,[bp+4]
+	mov	[di],ax
+	mov	[di+2],bx
+	mov	[di+4],cx
+	mov	[di+6],dx
+	mov	ax,ds:[i86bp]
+	mov	[di+8],ax
+	mov	[di+10],si
+	mov	ax,[bp-4]
+	mov	[di+12],ax
+	mov	ax,[bp-2]
+	mov	[di+14],ax
+	mov	ax,cs:[i86xds]
+	mov	[di+16],ax
+	mov	[di+18],es
+	pop	es
+	pop	di
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	popf
+	mov	sp,bp
+	pop	bp
+	ret	6
+	i86xdi	dw ?
+	i86xds	dw ?
+_crc32:
+	push	bp
+	mov	bp,sp
+	push	bx
+	push	cx
+	push	si
+	push	es
+	mov	si,[bp+6]
+	les	ax,[bp+8]
+	mov	dx,es
+	mov	cx,[bp+4]
+	jcxz	I82
+I81:
+	mov	bh,0
+	mov	bl,al
+	lodsb
+	xor	bl,al
+	mov	al,ah
+	mov	ah,dl
+	mov	dl,dh
+	mov	dh,0
+@1	shl	bx,1
+@1	shl	bx,1
+#1	shl	bx,2
+	les	bx,dword ptr cs:[crc32tab+bx]
+	xor	ax,bx
+	mov	bx,es
+	xor	dx,bx
+	loop	I81
+I82:
+	pop	es
+	pop	si
+	pop	cx
+	pop	bx
+	pop	bp
+	ret	8
+	ENDP
+crc32tab:
+	dd	000000000h, 077073096h, 0ee0e612ch, 0990951bah
+	dd	0076dc419h, 0706af48fh, 0e963a535h, 09e6495a3h
+	dd	00edb8832h, 079dcb8a4h, 0e0d5e91eh, 097d2d988h
+	dd	009b64c2bh, 07eb17cbdh, 0e7b82d07h, 090bf1d91h
+	dd	01db71064h, 06ab020f2h, 0f3b97148h, 084be41deh
+	dd	01adad47dh, 06ddde4ebh, 0f4d4b551h, 083d385c7h
+	dd	0136c9856h, 0646ba8c0h, 0fd62f97ah, 08a65c9ech
+	dd	014015c4fh, 063066cd9h, 0fa0f3d63h, 08d080df5h
+	dd	03b6e20c8h, 04c69105eh, 0d56041e4h, 0a2677172h
+	dd	03c03e4d1h, 04b04d447h, 0d20d85fdh, 0a50ab56bh
+	dd	035b5a8fah, 042b2986ch, 0dbbbc9d6h, 0acbcf940h
+	dd	032d86ce3h, 045df5c75h, 0dcd60dcfh, 0abd13d59h
+	dd	026d930ach, 051de003ah, 0c8d75180h, 0bfd06116h
+	dd	021b4f4b5h, 056b3c423h, 0cfba9599h, 0b8bda50fh
+	dd	02802b89eh, 05f058808h, 0c60cd9b2h, 0b10be924h
+	dd	02f6f7c87h, 058684c11h, 0c1611dabh, 0b6662d3dh
+	dd	076dc4190h, 001db7106h, 098d220bch, 0efd5102ah
+	dd	071b18589h, 006b6b51fh, 09fbfe4a5h, 0e8b8d433h
+	dd	07807c9a2h, 00f00f934h, 09609a88eh, 0e10e9818h
+	dd	07f6a0dbbh, 0086d3d2dh, 091646c97h, 0e6635c01h
+	dd	06b6b51f4h, 01c6c6162h, 0856530d8h, 0f262004eh
+	dd	06c0695edh, 01b01a57bh, 08208f4c1h, 0f50fc457h
+	dd	065b0d9c6h, 012b7e950h, 08bbeb8eah, 0fcb9887ch
+	dd	062dd1ddfh, 015da2d49h, 08cd37cf3h, 0fbd44c65h
+	dd	04db26158h, 03ab551ceh, 0a3bc0074h, 0d4bb30e2h
+	dd	04adfa541h, 03dd895d7h, 0a4d1c46dh, 0d3d6f4fbh
+	dd	04369e96ah, 0346ed9fch, 0ad678846h, 0da60b8d0h
+	dd	044042d73h, 033031de5h, 0aa0a4c5fh, 0dd0d7cc9h
+	dd	05005713ch, 0270241aah, 0be0b1010h, 0c90c2086h
+	dd	05768b525h, 0206f85b3h, 0b966d409h, 0ce61e49fh
+	dd	05edef90eh, 029d9c998h, 0b0d09822h, 0c7d7a8b4h
+	dd	059b33d17h, 02eb40d81h, 0b7bd5c3bh, 0c0ba6cadh
+	dd	0edb88320h, 09abfb3b6h, 003b6e20ch, 074b1d29ah
+	dd	0ead54739h, 09dd277afh, 004db2615h, 073dc1683h
+	dd	0e3630b12h, 094643b84h, 00d6d6a3eh, 07a6a5aa8h
+	dd	0e40ecf0bh, 09309ff9dh, 00a00ae27h, 07d079eb1h
+	dd	0f00f9344h, 08708a3d2h, 01e01f268h, 06906c2feh
+	dd	0f762575dh, 0806567cbh, 0196c3671h, 06e6b06e7h
+	dd	0fed41b76h, 089d32be0h, 010da7a5ah, 067dd4acch
+	dd	0f9b9df6fh, 08ebeeff9h, 017b7be43h, 060b08ed5h
+	dd	0d6d6a3e8h, 0a1d1937eh, 038d8c2c4h, 04fdff252h
+	dd	0d1bb67f1h, 0a6bc5767h, 03fb506ddh, 048b2364bh
+	dd	0d80d2bdah, 0af0a1b4ch, 036034af6h, 041047a60h
+	dd	0df60efc3h, 0a867df55h, 0316e8eefh, 04669be79h
+	dd	0cb61b38ch, 0bc66831ah, 0256fd2a0h, 05268e236h
+	dd	0cc0c7795h, 0bb0b4703h, 0220216b9h, 05505262fh
+	dd	0c5ba3bbeh, 0b2bd0b28h, 02bb45a92h, 05cb36a04h
+	dd	0c2d7ffa7h, 0b5d0cf31h, 02cd99e8bh, 05bdeae1dh
+	dd	09b64c2b0h, 0ec63f226h, 0756aa39ch, 0026d930ah
+	dd	09c0906a9h, 0eb0e363fh, 072076785h, 005005713h
+	dd	095bf4a82h, 0e2b87a14h, 07bb12baeh, 00cb61b38h
+	dd	092d28e9bh, 0e5d5be0dh, 07cdcefb7h, 00bdbdf21h
+	dd	086d3d2d4h, 0f1d4e242h, 068ddb3f8h, 01fda836eh
+	dd	081be16cdh, 0f6b9265bh, 06fb077e1h, 018b74777h
+	dd	088085ae6h, 0ff0f6a70h, 066063bcah, 011010b5ch
+	dd	08f659effh, 0f862ae69h, 0616bffd3h, 0166ccf45h
+	dd	0a00ae278h, 0d70dd2eeh, 04e048354h, 03903b3c2h
+	dd	0a7672661h, 0d06016f7h, 04969474dh, 03e6e77dbh
+	dd	0aed16a4ah, 0d9d65adch, 040df0b66h, 037d83bf0h
+	dd	0a9bcae53h, 0debb9ec5h, 047b2cf7fh, 030b5ffe9h
+	dd	0bdbdf21ch, 0cabac28ah, 053b39330h, 024b4a3a6h
+	dd	0bad03605h, 0cdd70693h, 054de5729h, 023d967bfh
+	dd	0b3667a2eh, 0c4614ab8h, 05d681b02h, 02a6f2b94h
+	dd	0b40bbe37h, 0c30c8ea1h, 05a05df1bh, 02d02ef8dh
+_crc32s:
+	push	bp
+	mov	bp,sp
+	push	si
+	push	cx
+	push	word ptr [bp+8]
+	push	word ptr [bp+6]
+	mov	si,word ptr [bp+4]
+	mov	cx,word ptr ds:[si]
+	add	si,2
+	push	si
+	push	cx
+	call	_crc32
+	pop	cx
+	pop	si
+	pop	bp
+	ret	6
+_endrevw:
+	push	bp
+	mov	bp,sp
+	mov	ax,[bp+4]
+	xchg	al,ah
+	pop	bp
+	ret	2
+_endrevd:
+	push	bp
+	mov	bp,sp
+	mov	ax,[bp+6]
+	mov	dx,[bp+4]
+	xchg	al,dh
+	xchg	ah,dl
+	pop	bp
+	ret	4
+_mem2disk_null:
+	ret
+_mem2disk_pascal:
+	ret
+_mem2disk_mr:
+	ret
+_disk2mem_null:
+	push	bx
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	di,si
+	mov	al,0
+	mov	bx,cx
+	repnz	scasb
+	jnz	I85
+	sub	bx,cx
+	lea	cx,[bx-1]
+	jcxz	I86
+I83:
+	add	bx,2
+	call	_mem_alloc
+	mov	[di],cx
+	push	di
+	push	si
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	rep	movsb
+	pop	si
+	pop	word ptr [si]
+I84:
+#Z	pop	es
+	pop	di
+	pop	bx
+	ret
+I85:
+	mov	cx,bx
+	jmp	I83
+I86:
+	mov	word ptr [si],cx
+	jmp	short I84
+_disk2mem_mr:
+	push	bx
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	bx,[si]
+	mov	cx,bx
+	jcxz	I88
+	add	bx,2
+	call	_mem_alloc
+	mov	[si],di
+	mov	[di],cx
+@S	inc	si
+@S	inc	si
+#S	add	si,2
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	rep	movsb
+I87:
+#Z	pop	es
+	pop	di
+	pop	bx
+	ret
+I88:
+	mov	word ptr [si],cx
+	jmp	short I87
+_disk2mem_pascal:
+	push	bx
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	bl,[si]
+	mov	bh,0
+	mov	cx,bx
+	jcxz	I90
+	add	bx,2
+	call	_mem_alloc
+	push	di
+	push	si
+	mov	[di],cx
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	inc	si
+	rep	movsb
+	pop	si
+	pop	word ptr [si]
+I89:
+#Z	pop	es
+	pop	di
+	pop	bx
+	ret
+I90:
+	mov	word ptr [si],cx
+	jmp	short I89
+_mem_put_2:
+	push	bx
+	push	es
+	mov	es,bx
+	mov	bx,[si]
+	mov	es:[di],bx
+	pop	es
+	pop	bx
+	ret
+_mem_put_4:
+@3	push	bx
+#3	push	ebx
+	push	es
+	mov	es,bx
+@3	mov	bx,[si]
+@3	mov	es:[di],bx
+@3	mov	bx,[si+2]
+@3	mov	es:[di+2],bx
+#3	mov	ebx,[si]
+#3	mov	es:[di],ebx
+	pop	es
+@3	pop	bx
+#3	pop	ebx
+	ret
+_mem_put_x:
+	jcxz	I91
+	push	bx
+	push	es
+	mov	es,bx
+	rep	movsb
+	pop	es
+	pop	bx
+I91:
+	ret
+_mem_get_2:
+	push	bx
+	push	es
+	mov	es,bx
+	mov	bx,es:[si]
+	mov	[di],bx
+	pop	es
+	pop	bx
+	ret
+_mem_get_4:
+	push	bx
+	push	es
+	mov	es,bx
+	mov	bx,es:[si]
+	mov	[di],bx
+	mov	bx,es:[si+2]
+	mov	[di+2],bx
+	pop	es
+	pop	bx
+	ret
+_mem_get_x:
+	jcxz	I92
+	push	bx
+	push	es
+	push	ds
+	push	ds
+	pop	es
+	mov	ds,bx
+	rep	movsb
+	pop	ds
+	pop	es
+	pop	bx
+I92:
+	ret
+_str_ccnt:
+	push	dx
+	push	di
+#Z	push	es
+	mov	di,si
+	xchg	ax,cx
+	xor	dx,dx
+	or	bx,bx
+	jz	I93
+	mov	cx,bx
+	jcxz	I93
+	cmp	cx,ds:[di]
+	jbe	I94
+I93:
+	mov	cx,ds:[di]
+I94:
+#Z	push	ds
+#Z	pop	es
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+I95:
+	repnz	scasb
+	jz	I97
+I96:
+	jcxz	I98
+	jmp	short I95
+I97:
+	inc	dx
+	jmp	short I96
+I98:
+	xchg	ax,dx
+#Z	pop	es
+	pop	di
+	pop	dx
+	ret
+_str_instr1:
+	push	bx
+	push	cx
+	push	dx
+	push	bp
+	push	es
+	mov	bp,sp
+	sub	sp,6
+	push	ds
+	pop	es
+	mov	al,ds:[si+2]
+	mov	[bp-6],ax
+	mov	cx,ds:[di]
+	mov	[bp-2],di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+I99:
+	mov	ax,[bp-6]
+	repnz	scasb
+	jnz	I103
+	jcxz	I103
+	mov	bx,si
+	mov	dx,ds:[si]
+@S	inc	si
+@S	inc	si
+#S	add	si,2
+	mov	[bp-4],di
+	dec	di
+I100:
+	lodsb
+	cmp	ds:[di],al
+	jnz	I101
+	inc	di
+	jz	I103
+	dec	dx
+	jnz	I100
+	mov	ax,[bp-4]
+	sub	ax,[bp-2]
+	sub	ax,2
+	jmp	short I102
+I101:
+	mov	si,bx
+	mov	di,[bp-4]
+	inc	di
+	loop	I99
+	jmp	short I103
+I102:
+	mov	sp,bp
+	pop	es
+	pop	bp
+	pop	dx
+	pop	cx
+	pop	bx
+	ret
+I103:
+	xor	ax,ax
+	jmp	short I102
+_str_cs_ds_mark:
+	call	_str_cs_ds
+	jmp	_str_mark_si
+%include _str_mark_si
+_str_mark_si:
+%allocate mr@markptr 2
+%allocate mr@marklist 50
+	push	bx
+	mov	bx,word ptr ds:[mr@markptr]
+	mov	word ptr ds:[mr@marklist+bx],si
+	add	word ptr ds:[mr@markptr],2
+	pop	bx
+	ret
+_str_mark_di:
+%allocate mr@markptr 2
+%allocate mr@marklist 50
+	push	bx
+	mov	bx,word ptr ds:[mr@markptr]
+	mov	word ptr ds:[mr@marklist+bx],di
+	add	word ptr ds:[mr@markptr],2
+	pop	bx
+	ret
+_str_free:
+	mov	bx,[bx]
+	jmp	_mem_free
+%include _mem_free
+_str_rtrim:
+	push	ax
+	push	bx
+	push	cx
+	push	si
+#Z	push	es
+	mov	cx,[si]
+	jcxz	I107
+#Z	push	ds
+#Z	pop	es
+	lodsw
+	push	si
+	add	si,cx
+	inc	cx
+I104:
+	dec	si
+	jcxz	I106
+	dec	cx
+	mov	al,[si]
+	cmp	al,' '
+	jbe	I104
+	pop	si
+	jcxz	I107
+	mov	bx,cx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+	mov	ax,cx
+	stosw
+	rep	movsb
+	pop	di
+I105:
+#Z	pop	es
+	pop	si
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I106:
+	pop	si
+I107:
+	xor	di,di
+	jmp	short I105
+_sinstr:
+%allocate mr@sinstr_set 256
+	push	bx
+	push	cx
+	push	dx
+	push	bp
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	bx,di
+	mov	di,offset mr@sinstr_set
+	mov	dx,di
+@3	xor	ax,ax
+@3	mov	cx,128
+@3	rep	stosw
+#3	xor	eax,eax
+#3	mov	cx,64
+#3	rep	stosd
+	mov	cx,[bx]
+	jcxz	I110
+	add	bx,2
+I108:
+	mov	di,dx
+	mov	al,[bx]
+	add	di,ax
+	mov	byte ptr [di],-1
+	inc	bx
+	loop	I108
+	mov	cx,[si]
+	jcxz	I110
+@S	inc	si
+@S	inc	si
+#S	add	si,2
+	xor	bp,bp
+	mov	di,dx
+	mov	bh,0
+I109:
+	inc	bp
+	mov	bl,[si]
+	inc	si
+	cmp	byte ptr [di+bx],-1
+	jz	I111
+	loop	I109
+I110:
+	xor	ax,ax
+	jmp	short I112
+I111:
+	xchg	ax,bp
+I112:
+#Z	pop	es
+	pop	bp
+	pop	dx
+	pop	cx
+	pop	bx
+	ret
+_str_mix:
+%allocate mr@str_mix_ret 2
+	pop	word ptr ds:[mr@str_mix_ret]
+	push	bp
+	mov	bp,sp
+	add	bp,2
+	push	ax
+	push	bx
+	push	dx
+	push	si
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	dx,cx
+	xor	si,si
+	xor	ax,ax
+I113:
+	mov	bx,[bp+si]
+	add	ax,[bx]
+@S	inc	si
+@S	inc	si
+#S	add	si,2
+	loop	I113
+	mov	bx,ax
+	push	bx
+	add	bx,2
+	call	_mem_alloc
+	pop	ax
+	push	di
+	stosw
+	mov	si,dx
+	shl	si,1
+I114:
+	mov	bx,[bp+si-2]
+	push	si
+	mov	si,bx
+	mov	cx,[si]
+	lodsw
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+	pop	si
+@S	dec	si
+@S	dec	si
+#S	sub	si,2
+	jnz	I114
+	pop	di
+	mov	cx,dx
+	shl	cx,1
+#Z	pop	es
+	pop	si
+	pop	dx
+	pop	bx
+	pop	ax
+	pop	bp
+	add	sp,cx
+	jmp	word ptr ds:[mr@str_mix_ret]
+_str_conc:
+	push	ax
+	push	bx
+	push	cx
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	bx,[di]
+	add	bx,[si]
+	push	si
+	mov	si,di
+	push	bx
+	add	bx,2
+	call	_mem_alloc
+	pop	bx
+	mov	[di],bx
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	mov	cx,[si]
+	jcxz	I115
+	add	si,2
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+I115:
+	pop	ax
+	pop	si
+	push	ax
+	mov	cx,[si]
+	jcxz	I116
+@S	inc	si
+@S	inc	si
+#S	add	si,2
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+I116:
+	pop	di
+#Z	pop	es
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_str_copy:
+	push	ax
+	push	bx
+	push	cx
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	cx,[si]
+	jcxz	I118
+	add	cx,2
+	mov	bx,cx
+	call	_mem_alloc
+	push	di
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+	pop	di
+I117:
+#Z	pop	es
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I118:
+	xor	di,di
+	jmp	short I117
+_str_cs_ds:
+	push	ax
+	push	bx
+	push	cx
+	push	di
+	push	ds
+	push	es
+@P#E	mov	ax,seg _STRCONST
+@P#E	mov	es,ax
+#P#E	mov	es,word ptr ds:[_strconstseg]
+#E	mov	cx,es:[si]
+@E	mov	cx,cs:[si]
+	jcxz	I120
+	add	cx,2
+	mov	bx,cx
+	call	_mem_alloc
+	push	di
+	push	ds
+	pop	es
+@P#E	mov	ax,seg _STRCONST
+@P#E	mov	ds,ax
+#P#E	mov	ds,word ptr ds:[_strconstseg]
+@E	push	cs
+@E	pop	ds
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+	pop	si
+I119:
+	pop	es
+	pop	ds
+	pop	di
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I120:
+	xor	si,si
+	jmp	short I119
+_str_compare:
+	push	cx
+	push	si
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	xor	ax,ax
+	mov	cx,[si]
+	jcxz	I123
+	cmp	cx,[di]
+	jnz	I122
+@S	inc	si
+@S	inc	si
+#S	add	si,2
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	rep	cmpsb
+	jnz	I122
+I121:
+	dec	ax
+I122:
+	cmp	ax,-1
+#Z	pop	es
+	pop	di
+	pop	si
+	pop	cx
+	ret
+I123:
+	cmp	word ptr ds:[di],0
+	jnz	I122
+	jmp	I121
+_str_ucase:
+	push	ax
+	push	bx
+	push	cx
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	cx,[si]
+	jcxz	I127
+	mov	bx,cx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+	mov	ax,cx
+	stosw
+	lodsw
+I124:
+	lodsb
+	cmp	al,'a'
+	jb	I125
+	cmp	al,'z'
+	ja	I125
+	and	al,0dfh
+I125:
+	stosb
+	loop	I124
+	pop	di
+I126:
+#Z	pop	es
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I127:
+	xor	di,di
+	jmp	short I126
+_str_lcase:
+	push	ax
+	push	bx
+	push	cx
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	cx,[si]
+	jcxz	I131
+	mov	bx,cx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+	mov	ax,cx
+	stosw
+	lodsw
+I128:
+	lodsb
+	cmp	al,'A'
+	jb	I129
+	cmp	al,'Z'
+	ja	I129
+	or	al,20h
+I129:
+	stosb
+	loop	I128
+	pop	di
+I130:
+#Z	pop	es
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I131:
+	xor	di,di
+	jmp	short I130
+_str_left:
+	push	ax
+	push	bx
+	push	cx
+	jcxz	I134
+	cmp	cx,[si]
+	jb	I132
+	mov	cx,[si]
+I132:
+	mov	bx,cx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	lodsw
+	mov	ax,cx
+	stosw
+@S	rep	movsb
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+#Z	pop	es
+	pop	di
+I133:
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I134:
+	xor	di,di
+	jmp	short I133
+_str_right:
+	push	ax
+	push	bx
+	push	cx
+	jcxz	I137
+	mov	bx,[si]
+	cmp	cx,bx
+	jb	I135
+	mov	cx,[si]
+I135:
+	sub	bx,cx
+	add	si,bx
+	mov	bx,cx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	lodsw
+	mov	ax,cx
+	stosw
+@S	rep	movsb
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+#Z	pop	es
+	pop	di
+I136:
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I137:
+	xor	di,di
+	jmp	short I136
+_str_ltrim:
+	push	ax
+	push	bx
+	push	cx
+#Z	push	es
+	mov	cx,[si]
+	jcxz	I139
+#Z	push	ds
+#Z	pop	es
+	lodsw
+I138:
+	mov	al,[si]
+	cmp	al,' '
+	ja	I140
+	inc	si
+	loop	I138
+I139:
+	xor	di,di
+	jmp	short I141
+I140:
+	mov	bx,cx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+	mov	ax,cx
+	stosw
+	rep	movsb
+	pop	di
+I141:
+#Z	pop	es
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_cinstr:
+	push	bx
+	push	cx
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	xchg	cx,ax
+	mov	cx,[si]
+	jcxz	I142
+@S	inc	si
+@S	inc	si
+#S	add	si,2
+	mov	di,si
+	repnz	scasb
+	jz	I143
+I142:
+	xor	ax,ax
+	jmp	short I144
+I143:
+	mov	ax,di
+	sub	ax,si
+I144:
+#Z	pop	es
+	pop	di
+	pop	cx
+	pop	bx
+	ret
+_str_mid:
+	push	dx
+#3	push	ax
+	mov	dx,[si]
+	sub	dx,bx
+	jc	I147
+	dec	bx
+	cmp	cx,dx
+	ja	I145
+	or	cx,cx
+	jnz	I146
+I145:
+	mov	cx,dx
+	inc	cx
+I146:
+	add	si,bx
+	mov	bx,cx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	lodsw
+	mov	ax,cx
+	stosw
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+#Z	pop	es
+	pop	di
+#3	pop	ax
+	pop	dx
+	ret
+I147:
+	xor	di,di
+#3	pop	ax
+	pop	dx
+	ret
+_str_space:
+	or	cx,cx
+	js	I148
+	jcxz	I148
+	push	ax
+	push	bx
+#Z	push	es
+	mov	bx,cx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+#Z	push	ds
+#Z	pop	es
+	mov	ax,cx
+	stosw
+	mov	al,' '
+	rep	stosb
+	pop	di
+#Z	pop	es
+	pop	bx
+	pop	ax
+	ret
+I148:
+	xor	di,di
+	ret
+_str_null:
+	or	cx,cx
+	js	I149
+	jcxz	I149
+	push	ax
+	push	bx
+#Z	push	es
+	mov	bx,cx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+#Z	push	ds
+#Z	pop	es
+	mov	ax,cx
+	stosw
+	xor	al,al
+	rep	stosb
+	pop	di
+#Z	pop	es
+	pop	bx
+	pop	ax
+	ret
+I149:
+	xor	di,di
+	ret
+_str_repstr:
+	push	ax
+	push	bx
+	push	dx
+	push	bp
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	lodsw
+	mov	bp,ax
+	mul	cx
+	push	ax
+	add	ax,2
+	xchg	bx,ax
+	call	_mem_alloc
+	pop	word ptr [di]
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	mov	bx,si
+	mov	ax,bp
+	mov	dx,cx
+I150:
+	mov	cx,ax
+	mov	si,bx
+@S	rep	movsb
+#S	shr	cx,1
+#S	rep	movsw
+#S	adc	cx,cx
+#S	rep	movsb
+	dec	dx
+	jnz	I150
+	pop	di
+#Z	pop	es
+	pop	bp
+	pop	dx
+	pop	bx
+	pop	ax
+	ret
+_hex8_con:
+	push	ax
+	push	dx
+	push	bx
+@1	shr	bl,1
+@1	shr	bl,1
+@1	shr	bl,1
+@1	shr	bl,1
+#1	shr	bl,4
+	call	__nybble_con
+	pop	bx
+	call	__nybble_con
+	pop	dx
+	pop	ax
+	ret
+_hex16_con:
+	push	bx
+	mov	bl,bh
+	call	_hex8_con
+	pop	bx
+	call	_hex8_con
+	ret
+__nybble_con:
+	and	bx,0Fh
+	mov	dl,byte ptr cs:[bx+mr@err_nybtab]
+	mov	ah,02h
+	int	21h
+	ret
+mr@err_nybtab:
+	db	'0123456789ABCDEF'
+_cprint:
+	push	bp
+	mov	bp,sp
+	push	ax
+	push	si
+	mov	si,[bp+2]
+I151:
+	mov	al,cs:[si]
+	or	al,al
+	jz	I152
+	call	_tty
+	inc	si
+	jmp	short I151
+I152:
+	inc	si
+	mov	[bp+2],si
+	pop	si
+	pop	ax
+	pop	bp
+	ret
+_packfunctiondump:
+%startup _pfdsetup
+%ss mr@func dw 21 dup(?)
+	pushf
+	push	cx
+	push	si
+	push	di
+	push	ds
+	push	es
+	mov	cx,ss
+	mov	ds,cx
+	mov	es,cx
+	mov	si,offset mr@func + 38
+	mov	di,offset mr@func + 40
+	mov	cx,21
+	std
+	rep	movsw
+	pop	es
+	pop	ds
+	pop	di
+	pop	si
+	pop	cx
+	popf
+	ret
+_pfdsetup:
+	push	es
+	push	ss
+	pop	es
+	mov	di,offset mr@func
+	mov	cx,21
+	xor	ax,ax
+	rep	stosw
+	pop	es
+	ret
+_tty_str_dos:
+@1	push	ax
+@1	push	bx
+@1	push	cx
+@1	push	dx
+#1	pusha
+	mov	cx,[di]
+	jcxz	I153
+	lea	dx,[di+2]
+	mov	ah,40h
+	mov	bx,1
+	int	21h
+I153:
+@1	pop	dx
+@1	pop	cx
+@1	pop	bx
+@1	pop	ax
+#1	popa
+	ret
+_trace:
+@1	push	ax
+@1	push	bx
+@1	push	cx
+@1	push	dx
+@1	push	si
+@1	push	di
+@1	push	bp
+@1	push	es
+#1	pusha
+	mov	al,'['
+	call	_tty
+#I	mov	di,word ptr cs:[mr@sourcefile]
+#I	push	ds
+#I	push	cs
+#I	pop	ds
+#I	call	_tty_str_dos
+#I	pop	ds
+#I	mov	al,':'
+#I	call	_tty
+	mov	ax,word ptr ss:[mr@line]
+	call	_err_wordu
+	mov	al,']'
+	call	_tty
+	mov	al,' '
+	call	_tty
+@1	pop	es
+@1	pop	bp
+@1	pop	di
+@1	pop	si
+@1	pop	dx
+@1	pop	cx
+@1	pop	bx
+@1	pop	ax
+#1	popa
+	ret
+_flock:
+#R	mov	word ptr ss:[_errcode],0
+	mov	ax,5c00h
+	int	21h
+	jc	I154
+	ret
+I154:
+#R	add	ax,100
+#R	mov	word ptr ss:[_errcode],ax
+#R	ret
+@R	jmp	_err_dos
+@R%include _err_dos
+_funlock:
+#R	mov	word ptr ss:[_errcode],0
+	mov	ax,5c01h
+	int	21h
+	jc	I155
+	ret
+I155:
+#R	add	ax,100
+#R	mov	word ptr ss:[_errcode],ax
+#R	ret
+@R	jmp	_err_dos
+@R%include _err_dos
+_abs16:
+	or	ax,ax
+	jl	I156
+	ret
+I156:
+	neg	ax
+	ret
+_sgn16ax:
+	or	ax,ax
+	jz	I157
+	mov	ax,1
+	jl	I158
+I157:
+	ret
+I158:
+	neg	ax
+	ret
+_sgn16bx:
+	or	bx,bx
+	jz	I159
+	mov	bx,1
+	jl	I160
+I159:
+	ret
+I160:
+	neg	bx
+	ret
+_dirstuff:
+	push	dx
+	push	si
+	push	di
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	push	ax
+	mov	al,0
+	clc
+	call	_str_2_asciiz
+	pop	ax
+	mov	dx,di
+	int	21h
+	jc	I162
+I161:
+	pop	di
+	pop	si
+	pop	dx
+	ret
+I162:
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I161
+@R	jmp	_err_dos
+@R%include _err_dos
+_frename:
+	push	bp
+	mov	bp,sp
+	push	ax
+	push	cx
+	push	dx
+	push	si
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	mov	si,[bp+6]
+	clc
+	mov	al,0
+	call	_str_2_asciiz
+	mov	dx,di
+	mov	si,[bp+4]
+	clc
+	mov	al,0
+	call	_str_2_asciiz
+	mov	cl,0
+	mov	ax,5600h
+	int	21h
+	jc	I164
+I163:
+#Z	pop	es
+	pop	di
+	pop	si
+	pop	dx
+	pop	cx
+	pop	ax
+	pop	bp
+	ret	4
+I164:
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I163
+@R	jmp	_err_dos
+@R%include _err_dos
+_freadfar:
+	push	bp
+	mov	bp,sp
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	push	ax
+	push	dx
+	mov	bx,[bp+10]
+	mov	cx,[bp+4]
+	mov	dx,[bp+6]
+	push	ds
+	mov	ds,[bp+8]
+	mov	ah,3fh
+	int	21h
+	pop	ds
+	jc	I166
+I165:
+	or	ax,ax
+	jz	I167
+	pop	dx
+	pop	ax
+	pop	bp
+	ret	8
+I166:
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I165
+@R	jmp	_err_dos
+I167:
+	mov	ax,8
+$errhandler
+@R%include _err_dos
+_file_eof:
+%allocate mr@fbuf 30
+%allocate mr@fpos 30
+	push	bx
+	push	cx
+	push	dx
+	push	bp
+	push	si
+	mov	si,bx
+	add	si,si
+	mov	bp,bx
+	xor	cx,cx
+	xor	dx,dx
+	mov	ax,4201h
+	int	21h
+	mov	bx,dx
+	xchg	bx,bp
+	mov	cx,ax
+	call	_file_length
+	sub	ax,cx
+	sbb	dx,bp
+	js	I170
+	or	ax,ax
+	jz	I170
+I168:
+	xor	ax,ax
+I169:
+	pop	si
+	pop	bp
+	pop	dx
+	pop	cx
+	pop	bx
+	ret
+I170:
+	cmp	word ptr ds:[mr@fbuf+si],0
+	jz	I171
+	mov	bx,word ptr ds:[mr@fbuf+si]
+	cmp	word ptr [bx],0
+	jnz	I168
+I171:
+	mov	ax,-1
+	jmp	short I169
+_file_truename:
+	push	ax
+	push	bx
+	push	cx
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	bx,128
+	call	_mem_alloc
+	push	di
+	lodsw
+	xchg	cx,ax
+	rep	movsb
+	mov	byte ptr [di],0
+	pop	di
+	push	di
+	mov	si,di
+	mov	ah,60h
+	int	21h
+	jc	I173
+	pop	di
+	mov	bx,di
+	mov	dx,di
+	call	_asciiz_2_str
+	call	_mem_free
+I172:
+#Z	pop	es
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I173:
+	pop	bx
+	call	_mem_free
+	xor	di,di
+	jmp	short I172
+_fread_str:
+	mov	cx,[si]
+	add	si,2
+	jmp	_fread
+%include _fread
+_asciiz_2_str:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	si
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	si,dx
+	xor	cx,cx
+I174:
+	lodsb
+	or	al,al
+	jz	I175
+	inc	cx
+	jmp	short I174
+I175:
+	mov	bx,cx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+	mov	ax,cx
+	stosw
+	mov	si,dx
+	rep	movsb
+I176:
+	pop	di
+#Z	pop	es
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_str_2_asciiz:
+	push	bx
+	push	cx
+	push	dx
+	push	si
+	push	bp
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	jc	I177
+	xor	dx,dx
+	jmp	short I178
+I177:
+	mov	dx,1
+I178:
+	mov	bp,ax
+	mov	bx,[si]
+	mov	cx,bx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+	lodsw
+	or	dx,dx
+	jz	I179
+	mov	byte ptr [di],' '
+	inc	di
+I179:
+	jcxz	I180
+	rep	movsb
+I180:
+	mov	ax,bp
+	stosb
+	pop	di
+#Z	pop	es
+	pop	bp
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	ret
+_file_create:
+%allocate mr@filename 30
+%allocate mr@fbuf 30
+%allocate mr@fpos 30
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	push	bx
+	push	cx
+	push	dx
+	push	di
+	clc
+	mov	al,0
+	call	_str_2_asciiz
+	push	di
+	mov	dx,di
+	mov	ah,3ch
+	int	21h
+	jc	I182
+	call	_str_copy
+	mov	bx,ax
+	shl	bx,1
+	mov	word ptr ds:[mr@filename+bx],di
+I181:
+	pop	bx
+	call	_mem_free
+	pop	di
+	pop	dx
+	pop	cx
+	pop	bx
+	ret
+I182:
+#R	add	ax,100
+#R	mov	word ptr ss:[_errcode],ax
+#R	mov	ax,-1
+#R	jmp	short I181
+@R	jmp	_err_dos
+@R%include _err_dos
+_file_open:
+%allocate mr@filename 30
+%allocate mr@fbuf 30
+%allocate mr@fpos 30
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	push	bx
+	push	cx
+	push	dx
+	push	di
+	push	bp
+	mov	bp,cx
+	clc
+	mov	al,0
+	call	_str_2_asciiz
+	push	di
+I183:
+	mov	dx,di
+	mov	ax,bp
+	and	al,7fh
+	mov	ah,3dh
+	xor	cx,cx
+	int	21h
+	jc	I185
+	call	_str_copy
+	mov	bx,ax
+	shl	bx,1
+	mov	word ptr ds:[mr@filename+bx],di
+	push	word ptr ds:[mr@fbuf+bx]
+	mov	word ptr ds:[mr@fbuf+bx],0
+	pop	bx
+	call	_mem_free
+	pop	bx
+	call	_mem_free
+I184:
+	pop	bp
+	pop	di
+	pop	dx
+	pop	cx
+	pop	bx
+	ret
+I185:
+	cmp	ax,2
+	jnz	I186
+	test	bp,00000011b
+	jz	I186
+	mov	cx,20h
+	push	si
+	call	_file_create
+	pop	si
+	mov	bx,ax
+	mov	ah,3eh
+	int	21h
+	jmp	I183
+I186:
+#R	pop	bx
+#R	call	_mem_free
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I184
+@R	jmp	_err_dos
+@R%include _err_dos
+_file_close:
+%allocate mr@filename 30
+%allocate mr@fbuf 30
+%allocate mr@fpos 30
+%allocate mr@finputeof 30
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	or	bx,bx
+	jz	I189
+	push	ax
+	push	si
+	mov	ah,3eh
+	int	21h
+	jc	I188
+	add	bx,bx
+	mov	si,bx
+	mov	bx,word ptr ds:[mr@filename+si]
+	call	_mem_free
+	mov	bx,word ptr ds:[mr@fbuf+si]
+	call	_mem_free
+	xor	ax,ax
+	mov	word ptr ds:[mr@filename+si],ax
+	mov	word ptr ds:[mr@fpos+si],ax
+	mov	word ptr ds:[mr@finputeof+si],ax
+	mov	word ptr ds:[mr@fbuf+si],ax
+I187:
+	pop	si
+	pop	ax
+	ret
+I188:
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I187
+@R	jmp	_err_dos
+I189:
+	mov	ax,4
+$errhandler
+@R%include _err_dos
+_file_write:
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	push	ax
+	push	dx
+	mov	dx,si
+	mov	ah,40h
+	int	21h
+	jc	I191
+I190:
+	pop	dx
+	pop	ax
+	ret
+I191:
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I190
+@R	jmp	_err_dos
+@R%include _err_dos
+_file_seek:
+%allocate mr@fbuf 30
+%allocate mr@fpos 30
+%allocate mr@finputeof 30
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	push	cx
+	push	si
+	mov	cx,dx
+	mov	dx,ax
+	mov	ax,4200h
+	int	21h
+	jc	I193
+	mov	si,bx
+	add	si,si
+	mov	bx,word ptr ds:[mr@fbuf+si]
+	call	_mem_free
+	xor	cx,cx
+	mov	word ptr ds:[mr@fbuf+si],cx
+	mov	word ptr ds:[mr@fpos+si],cx
+	mov	word ptr ds:[mr@finputeof+si],cx
+I192:
+	pop	si
+	pop	cx
+	ret
+I193:
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I192
+@R	jmp	_err_dos
+@R%include _err_dos
+_file_pos:
+%allocate mr@fbuf 30
+%allocate mr@fpos 30
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	push	bx
+	push	cx
+	xor	cx,cx
+	xor	dx,dx
+	mov	ax,4201h
+	int	21h
+	jc	I195
+	add	bx,bx
+	cmp	word ptr ds:[mr@fbuf+bx],0
+	jz	I194
+	sub	ax,1024
+	sbb	dx,0
+	add	ax,word ptr ds:[mr@fpos+bx]
+	adc	dx,0
+I194:
+	pop	cx
+	pop	bx
+	ret
+I195:
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I194
+@R	jmp	_err_dos
+@R%include _err_dos
+_file_length:
+	push	bp
+	mov	bp,sp
+	sub	sp,4
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	push	cx
+	xor	cx,cx
+	xor	dx,dx
+	mov	ax,4201h
+	int	21h
+	jc	I197
+	mov	word ptr [bp-2],ax
+	mov	word ptr [bp-4],dx
+	xor	cx,cx
+	xor	dx,dx
+	mov	ax,4202h
+	int	21h
+	jc	I197
+	push	ax
+	push	dx
+	mov	cx,word ptr [bp-4]
+	mov	dx,word ptr [bp-2]
+	mov	ax,4200h
+	int	21h
+	jc	I197
+I196:
+	pop	dx
+	pop	ax
+	pop	cx
+	mov	sp,bp
+	pop	bp
+	ret
+I197:
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I196
+@R	jmp	_err_dos
+@R%include _err_dos
+_fread:
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	push	ax
+	push	dx
+	mov	dx,si
+	mov	ah,3fh
+	int	21h
+	jc	I199
+I198:
+	or	ax,ax
+	jz	I200
+	pop	dx
+	pop	ax
+	ret
+I199:
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I198
+@R	jmp	_err_dos
+I200:
+	mov	ax,8
+$errhandler
+@R%include _err_dos
+_file_print:
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	push	ax
+	push	cx
+	push	dx
+	push	di
+	mov	cx,[di]
+	jcxz	I201
+	lea	dx,[di+2]
+	mov	ah,40h
+	int	21h
+	jc	I202
+I201:
+	pop	di
+	pop	dx
+	pop	cx
+	pop	ax
+	ret
+I202:
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I201
+@R	jmp	_err_dos
+@R%include _err_dos
+_file_open_name:
+%allocate mr@filename 30
+%allocate mr@fbuf 30
+	push	ax
+	push	bx
+	push	si
+	cmp	bx,15
+	ja	I203
+	shl	bx,1
+	mov	si,word ptr ds:[mr@filename+bx]
+	or	si,si
+	jz	I203
+	call	_str_copy
+	pop	si
+	pop	bx
+	pop	ax
+	ret
+I203:
+	mov	ax,4
+$errhandler
+_file_kill:
+#C	mov	word ptr cs:[mr@critical_err],0
+#R	mov	word ptr ss:[_errcode],0
+	push	cx
+	push	dx
+	push	di
+	clc
+	mov	al,0
+	call	_str_2_asciiz
+	push	di
+	mov	dx,di
+	mov	ah,41h
+	mov	cl,0
+	int	21h
+	jc	I205
+I204:
+	pop	bx
+	call	_mem_free
+	pop	di
+	pop	dx
+	pop	cx
+	ret
+I205:
+#R	mov	word ptr ss:[_errcode],ax
+#R	jmp	short I204
+@R	jmp	_err_dos
+@R%include _err_dos
+_rand:
+%allocate mr@rand1 2
+%allocate mr@rand2 2
+	push	bx
+	push	cx
+	push	dx
+	push	si
+	push	di
+	mov	di,ax
+	mov	cx,015Ah
+	mov	bx,04E35h
+	mov	si,ds:[mr@rand2]
+	mov	ax,ds:[mr@rand1]
+	mov	dx,ax
+	mul	bx
+	xchg	ax,cx
+	mul	di
+	add	cx,ax
+	mov	ax,si
+	mul	bx
+	add	dx,cx
+	add	ax,1
+	adc	dx,0
+	mov	ds:[mr@rand2],ax
+	mov	ax,dx
+	mov	ds:[mr@rand1],ax
+	and	ax,7fffh
+	cwd
+	div	di
+	mov	ax,dx
+	inc	ax
+	pop	di
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	ret
+_randomize:
+	push	bp
+	mov	bp,sp
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	mov	dx,[bp+6]
+	mov	cx,[bp+4]
+	test	dx,dx
+	jnz	I206
+	test	cx,cx
+	jnz	I206
+	xor	ah,ah
+	int	1ah
+I206:
+	mov	ds:[mr@rand1],cx
+	mov	ds:[mr@rand2],dx
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	pop	bp
+	ret	4
+_timeslice:
+%startup _multitask_setup
+%allocate mr@multitasker 1
+	cmp	byte ptr ds:[mr@multitasker],1
+	je	I208
+	jb	I207
+	mov	ax,1680h
+	int	2fh
+	ret
+I207:
+	int	28h
+	ret
+I208:
+	mov	ax,1000h
+	int	15h
+	ret
+_multitask_setup:
+%allocate mr@multitasker 1
+	mov	ax,2b01h
+	mov	cx,4445h
+	mov	dx,5351h
+	int	21h
+	cmp	al,0ffh
+	jz	I209
+	mov	al,1
+	jmp	short I211
+I209:
+	mov	ax,1680h
+	int	2fh
+	or	al,al
+	jnz	I210
+	mov	al,2
+	jmp	short I211
+I210:
+	xor	al,al
+I211:
+	mov	byte ptr ds:[mr@multitasker],al
+	ret
+_hash1:
+	push	cx
+	mov	cx,[si]
+	xor	ax,ax
+@S	inc	si
+@S	inc	si
+#S	add	si,2
+I212:
+	clc
+	xor	al,[si]
+	inc	si
+	add	ax,cx
+@1	rcr	ax,1
+@1	rcr	ax,1
+#1	rcr	ax,2
+	loop	I212
+	pop	cx
+	ret
+_hash2:
+	push	cx
+	mov	cx,[si]
+	xor	ax,ax
+@S	inc	si
+@S	inc	si
+#S	add	si,2
+I213:
+	clc
+	xor	al,[si]
+	inc	si
+	sub	ax,cx
+@1	rcl	ax,1
+@1	rcl	ax,1
+#1	rcl	ax,2
+	loop	I213
+	pop	cx
+	ret
+_fos_init:
+	push	bx
+	push	cx
+	push	si
+	push	es
+	mov	word ptr ss:[mr@fosactiveport],-1
+	cmp	ax,-1
+	jnz	I214
+#Z	push	ds
+#Z	pop	es
+	mov	bx,7
+	call	_mem_alloc
+	mov	si,offset mr@local
+	push	di
+	push	ds
+	push	cs
+	pop	ds
+#S	mov	cx,3
+#S	rep	movsw
+#S	movsb
+@S	mov	cx,7
+@S	rep	movsb
+	pop	ds
+	pop	di
+	jmp	short I216
+I214:
+	dec	ax
+	mov	word ptr ss:[mr@fosactiveport],ax
+	mov	dx,ax
+	mov	ax,0400h
+	xor	bx,bx
+	int	14h
+	cmp	ax,1954h
+	jz	I215
+	mov	word ptr ss:[mr@fosactiveport],-1
+	xor	di,di
+	jmp	I216
+I215:
+	mov	ax,1000h
+	int	14h
+	mov	ax,1400h
+	int	14h
+	mov	ax,1b00h
+	push	ss
+	pop	es
+	mov	di,offset mr@fosinfo
+	mov	cx,19
+	int	14h
+	mov	es,word ptr ss:[mr@fosinfo_idseg]
+	mov	di,word ptr ss:[mr@fosinfo_idptr]
+	mov	al,0
+	mov	cx,128
+	repnz	scasb
+	mov	bx,130
+	sub	bx,cx
+	lea	cx,[bx-2]
+	call	_mem_alloc
+	mov	[di],cx
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	mov	ax,es
+	push	ds
+	pop	es
+	mov	ds,ax
+	mov	si,word ptr ss:[mr@fosinfo_idptr]
+	rep	movsb
+	push	es
+	pop	ds
+	pop	di
+I216:
+	pop	es
+	pop	si
+	pop	cx
+	pop	bx
+	ret
+	mr@local: dw 5
+	db	'Local'
+%ss mr@fosactiveport dw 1 dup (?)
+%ss mr@fosinfo label near
+%ss mr@fosinfo_strsize dw 1 dup (?)
+%ss mr@fosinfo_ver dw 1 dup (?)
+%ss mr@fosinfo_idptr dw 1 dup (?)
+%ss mr@fosinfo_idseg dw 1 dup (?)
+%ss mr@fosinfo_ibufr dw 1 dup (?)
+%ss mr@fosinfo_ifree dw 1 dup (?)
+%ss mr@fosinfo_obufr dw 1 dup (?)
+%ss mr@fosinfo_ofree dw 1 dup (?)
+%ss mr@fosswidth db 1 dup (?)
+%ss mr@fossheight db 1 dup (?)
+%ss mr@fosbaud db 1 dup (?)
+_fos_carrier:
+	push	dx
+	mov	dx,word ptr ss:[mr@fosactiveport]
+	cmp	dx,-1
+	jz	I217
+	mov	ah,03h
+	int	14h
+	and	ax,128
+	jnz	I217
+	pop	dx
+	ret
+I217:
+	mov	ax,-1
+	pop	dx
+	ret
+_fos_datawaiting:
+	push	dx
+	mov	dx,word ptr ss:[mr@fosactiveport]
+	cmp	dx,-1
+	jz	I218
+	mov	ah,03h
+	int	14h
+	and	ax,256
+	jz	I218
+	mov	ax,-1
+	pop	dx
+	ret
+I218:
+	xor	ax,ax
+	pop	dx
+	ret
+_fos_deinit:
+	push	ax
+	push	dx
+	mov	dx,word ptr ss:[mr@fosactiveport]
+	cmp	dx,-1
+	jz	I219
+	mov	ah,05h
+	int	14h
+I219:
+	mov	word ptr ss:[mr@fosactiveport],-1
+	pop	dx
+	pop	ax
+	ret
+_fos_flush:
+	push	ax
+	push	dx
+	mov	dx,word ptr ss:[mr@fosactiveport]
+	cmp	dx,-1
+	jz	I220
+	mov	ah,08h
+	int	14h
+I220:
+	pop	dx
+	pop	ax
+	ret
+_fos_getchar:
+	push	dx
+	mov	dx,word ptr ss:[mr@fosactiveport]
+	cmp	dx,-1
+	jz	I221
+	mov	ah,03h
+	int	14h
+	and	ax,256
+	jz	I221
+	mov	ah,02h
+	int	14h
+	pop	dx
+	ret
+I221:
+	pop	dx
+	mov	ax,-1
+	ret
+_fos_tx:
+	push	ax
+	push	cx
+	push	dx
+	push	di
+#Z	push	es
+	mov	dx,word ptr ss:[mr@fosactiveport]
+	cmp	dx,-1
+	jz	I223
+	mov	cx,[si]
+	jcxz	I223
+	lea	di,[si+2]
+#Z	push	ds
+#Z	pop	es
+I222:
+	mov	ah,19h
+	int	14h
+	sub	cx,ax
+	add	di,ax
+	jcxz	I223
+	call	_timeslice
+	jmp	short I222
+I223:
+#Z	pop	es
+	pop	di
+	pop	dx
+	pop	cx
+	pop	ax
+	ret
+_drawbutton:
+%allocate mr@screenchar 4
+	push	bp
+	mov	bp,sp
+	sub	sp,2
+	mov	si,[bp+16]
+	call	_str_copy
+	mov	[bp-2],di
+	mov	word ptr ds:[mr@screenchar],1
+	call	_curp_get
+	push	dx
+	mov	dl,byte ptr [bp+14]
+	mov	dh,byte ptr [bp+12]
+	call	_curp_set
+	mov	al,byte ptr [bp+8]
+	mov	byte ptr ss:[mr@current_fore], al
+	mov	al,byte ptr [bp+6]
+	mov	byte ptr ss:[mr@current_back], al
+	mov	ax,[bp+10]
+	mov	bx,[bp-2]
+	mov	bx,ds:[bx]
+	sub	ax,bx
+	mov	bx,2
+	cwd
+	idiv	bx
+	or	ax,ax
+	jle	I224
+	mov	cx,ax
+	call	_str_space
+	push	di
+	mov	si,word ptr [bp-2]
+	call	_str_conc
+	pop	bx
+	call	_mem_free
+	mov	bx,[bp-2]
+	call	_mem_free
+	mov	[bp-2],di
+I224:
+	mov	cx,80
+	call	_str_space
+	push	di
+	mov	si,di
+	mov	di,word ptr [bp-2]
+	call	_str_conc
+	pop	bx
+	call	_mem_free
+	mov	bx,[bp-2]
+	call	_mem_free
+	mov	[bp-2],di
+	call	_str_release
+	mov	si,[bp-2]
+	mov	cx,[bp+10]
+	call	_str_left
+	push	di
+$outstream
+	pop	bx
+	call	_mem_free
+	mov	byte ptr ss:[mr@current_fore],0
+	mov	al,byte ptr [bp+4]
+	mov	byte ptr ss:[mr@current_back], al
+	mov	di,offset mr@screenchar
+	mov	byte ptr ds:[di+2],'Ü'
+$outstream
+	mov	dl,byte ptr [bp+14]
+	mov	dh,byte ptr [bp+12]
+	add	dx,0101h
+	call	_curp_set
+	mov	si,offset mr@screenchar
+	mov	byte ptr ds:[si+2],'ß'
+	mov	cx,[bp+10]
+	call	_str_repstr
+	push	di
+$outstream
+	pop	bx
+	call	_mem_free
+	mov	bx,word ptr [bp-2]
+	call	_mem_free
+	pop	dx
+	call	_curp_set
+	mov	sp,bp
+	pop	bp
+	ret	14
+_file_print_cs:
+@E	push	ds
+@E	push	cs
+@E	pop	ds
+#E	xchg	si,di
+#E	call	_str_cs_ds
+#E	xchg	di,si
+	call	_file_print
+#E	xchg	bx,di
+#E	call	_mem_free
+#E	xchg	di,bx
+@E	pop	ds
+	ret
+_echo_strconst:
+@E	push	ds
+@E	push	cs
+@E	pop	ds
+#E	xchg	si,di
+#E	call	_str_cs_ds
+#E	xchg	di,si
+#E	push	di
+$outstream
+#E	pop	bx
+#E	call	_mem_free
+@E	pop	ds
+	ret
+_echo_words:
+	push	bx
+	call	_words
+	push	di
+$outstream
+	pop	bx
+	call	_mem_free
+	pop	bx
+	ret
+_echo_doublewords:
+	push	bx
+	call	_doublewords
+	push	di
+$outstream
+	pop	bx
+	call	_mem_free
+	pop	bx
+	ret
+_crc16:
+	push	ax
+	push	dx
+	xor	dx,dx
+I225:
+	lodsb
+	xor	ah,ah
+	xchg	ah,al
+	xor	dx,ax
+	push	cx
+	mov	cx,8
+I226:
+	mov	bx,dx
+	shl	dx,1
+	and	bx,8000h
+	jz	I227
+	xor	dx,1021h
+I227:
+	loop	I226
+	pop	cx
+	loop	I225
+	mov	bx,dx
+	pop	dx
+	pop	ax
+	ret
+_atexit:
+%allocate mr@atexitptr 2
+%allocate mr@atexittab 32
+	push	di
+	mov	di,word ptr ds:[mr@atexitptr]
+	cmp	di,32
+	jae	I228
+	mov	word ptr ds:[mr@atexittab+di],ax
+	add	word ptr ds:[mr@atexitptr],2
+	pop	di
+	ret
+I228:
+	mov	ax,6
+$errhandler
+_cput:
+%startup _tty_str_direct_setup
+%startuppm _tty_str_direct_setup_pm
+	push	bp
+	mov	bp,sp
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	di
+	push	es
+	mov	es,word ptr ss:[mr@screen_seg]
+	mov	bl,byte ptr ss:[mr@current_back]
+@1	shl	bl,1
+@1	shl	bl,1
+@1	shl	bl,1
+@1	shl	bl,1
+#1	shl	bl,4
+	mov	cl,byte ptr ss:[mr@current_fore]
+	cmp	cl,16
+	jb	I229
+	or	bl,80h
+	and	cl,0fh
+I229:
+	or	bl,cl
+	mov	ah,bl
+	mov	dh,[bp+6]
+	mov	dl,[bp+8]
+#D	call	_curscheck
+	mov	al,[bp+4]
+	xor	cl,cl
+	mov	ch,dh
+	shr	cx,1
+	mov	di,cx
+@1	shr	di,1
+@1	shr	di,1
+#1	shr	di,2
+	add	di,cx
+	xor	ch,ch
+	mov	cl,dl
+	shl	cx,1
+	add	di,cx
+	stosw
+	pop	es
+	pop	di
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	pop	bp
+	ret	6
+_cget:
+%startup _tty_str_direct_setup
+%startuppm _tty_str_direct_setup_pm
+	push	bp
+	mov	bp,sp
+	push	cx
+	push	dx
+	push	si
+	push	ds
+	mov	ds,word ptr ss:[mr@screen_seg]
+	mov	dh,[bp+4]
+	mov	dl,[bp+6]
+#D	call	_curscheck
+	xor	cl,cl
+	mov	ch,dh
+	shr	cx,1
+	mov	si,cx
+@1	shr	si,1
+@1	shr	si,1
+#1	shr	si,2
+	add	si,cx
+	xor	ch,ch
+	mov	cl,dl
+	shl	cx,1
+	add	si,cx
+	lodsw
+	pop	ds
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bp
+	ret	4
+_curscheck:
+	cmp	dl,80
+	jae	I230
+	cmp	dh,byte ptr ss:[mr@screen_length]
+	ja	I230
+	ret
+I230:
+	mov	ax,6
+$errhandler
+_enter_pmode:
+	mov	ax,4300h
+	int	2fh
+	cmp	al,80h
+	jnz	I233
+	mov	ax,4310h
+	int	2fh
+	mov	word ptr cs:[I232],bx
+	mov	word ptr cs:[I232+2],es
+	jmp	short I231
+I231:
+	mov	ah,5
+	db	09ah
+I232:
+	dd	?
+I233:
+	mov	ax,1687h
+	int	2fh
+	test	ax,ax
+	jnz	I238
+	mov	word ptr cs:[I235],di
+	mov	word ptr cs:[I236],es
+	or	si,si
+	jz	I234
+	mov	bx,si
+	mov	ah,48h
+	int	21h
+	jc	I239
+	mov	es,ax
+	jmp	short I234
+I234:
+	xor	ax,ax
+	db	9Ah
+I235:
+	dw	?
+I236:
+	dw	?
+	jc	I240
+#E	mov	ds:[mr@psp],es
+	mov	ax,2
+	xor	bx,bx
+	int	31h
+	jc	I237
+	mov	fs,ax
+	mov	bx,ax
+	mov	ax,8
+	mov	cx,-1
+	mov	dx,cx
+	int	31h
+	jc	I237
+#E%allocate _strconstseg 2
+#E	mov	ax,2
+#E	mov	bx,seg _STRCONST
+#E	int	31h
+#E	jc	I237
+#E	mov	word ptr ds:[_strconstseg],ax
+	ret
+I237:
+	mov	ax,10
+$errhandler
+	ret
+I238:
+	call	_cprint
+	db	'DPMI host not present',0
+	jmp	_exit
+I239:
+	call	_cprint
+	db	'error allocating DPMI real mode workspace',0
+	jmp	_exit
+I240:
+	call	_cprint
+	db	'error entering protected mode',0
+	jmp	_exit
+_drawline:
+%include _drawline2
+	mov	ax,word ptr ds:[_putpixel]
+	mov	word ptr ds:[_dlpp],ax
+	jmp	_drawline2
+_drawlinex:
+%include _drawline2
+	mov	ax,word ptr ds:[_putpixelx]
+	mov	word ptr ds:[_dlpp],ax
+	jmp	_drawline2
+_drawline2:
+%allocate _dlpp 2
+	push	bp
+	mov	bp,sp
+	mov	bl,41h
+	mov	ax,[bp+12]
+	sub	ax,[bp+16]
+	jge	I241
+	mov	bl,49h
+	neg	ax
+I241:
+	mov	cx,ax
+	mov	bh,42h
+	mov	ax,[bp+10]
+	sub	ax,[bp+14]
+	jge	I242
+	mov	bh,4ah
+	neg	ax
+I242:
+	mov	dx,ax
+	mov	di,offset I247
+	cmp	dx,cx
+	jge	I243
+	xchg	cx,dx
+	xchg	bl,bh
+I243:
+	mov	byte ptr cs:[di],bh
+	mov	word ptr cs:[di+3],cx
+	shr	cx,1
+	mov	word ptr cs:[di+7],cx
+	mov	word ptr cs:[di+13],dx
+	mov	byte ptr cs:[di+15],bl
+	mov	di,dx
+	cmp	word ptr [bp+6],0
+	je	I244
+	mov	di,[bp+6]
+I244:
+	mov	cx,[bp+16]
+	mov	dx,[bp+14]
+	mov	al,[bp+8]
+	mov	bp,[bp+4]
+	xor	bx,bx
+	jmp	short I245
+I245:
+	cmp	bp,0
+	je	I246
+	dec	bp
+	jmp	I247
+I246:
+	call	word ptr ds:[_dlpp]
+I247:
+	inc	cx
+	add	bx,1111h
+	cmp	bx,1111h
+	jle	I248
+	sub	bx,1111h
+	inc	dx
+I248:
+	dec	di
+	jge	I245
+	pop	bp
+	ret	14
+_set_critical:
+%include _critical
+#3	push	eax
+@3	push	ax
+	push	es
+	xor	ax,ax
+	mov	es,ax
+	cli
+#3	mov	eax,dword ptr es:[24h*4]
+#3	mov	dword ptr cs:[old_int24],eax
+@3	mov	ax,word ptr es:[24h*4]
+@3	mov	word ptr cs:[old_int24],ax
+@3	mov	ax,word ptr es:[24h*4+2]
+@3	mov	word ptr cs:[old_int24+2],ax
+	mov	word ptr es:[24h*4],offset _critical
+	mov	word ptr es:[24h*4+2],cs
+	sti
+	pop	es
+@3	pop	ax
+#3	pop	eax
+	ret
+_restore_critical:
+@3	push	ax
+#3	push	eax
+	push	es
+	xor	ax,ax
+	mov	es,ax
+	cli
+#3	mov	eax,dword ptr cs:[old_int24]
+#3	mov	dword ptr es:[24h*4],eax
+@3	mov	ax,word ptr cs:[old_int24]
+@3	mov	word ptr es:[24h*4],ax
+@3	mov	ax,word ptr cs:[old_int24+2]
+@3	mov	word ptr es:[24h*4+2],ax
+	sti
+	pop	es
+@3	pop	ax
+#3	pop	eax
+	ret
+_critical:
+	test	ah,80h
+	jz	I249
+	db	0EAh ; jmp far
+	old_int24	dd ?
+I249:
+@P	mov	word ptr cs:[mr@critical_err],di
+#P	push	ds
+#P	mov	ax,seg _STACK
+#P	mov	ds,ax
+#P	mov	word ptr ds:[mr@critical_err],di
+#P	pop	ds
+	mov	al,03h
+	iret
+@P	mr@critical_err	dw 1 dup (?)
+#P%ss mr@critical_err dw 1 dup (?)
+_screensave:
+%startup _screensave_setup
+%allocate mr@screensave_stack 30
+%allocate mr@screensave_ptr 2
+	push	ax
+	push	bx
+	push	cx
+	push	si
+	push	di
+	push	es
+	mov	ax,160
+	mov	bl,byte ptr ss:[mr@screen_length]
+	mov	bh,0
+	mul	bx
+	mov	bx,ax
+	call	_farmalloc
+	mov	si,word ptr ds:[mr@screensave_ptr]
+	cmp	si,30
+	jae	I250
+	add	word ptr ds:[mr@screensave_ptr],2
+	mov	word ptr ds:[si+mr@screensave_stack],bx
+	mov	es,bx
+	xor	si,si
+	xor	di,di
+	mov	ax,80
+	mov	bl,byte ptr ss:[mr@screen_length]
+	mov	bh,0
+	mul	bx
+	mov	cx,ax
+	push	ds
+	mov	ds,word ptr ss:[mr@screen_seg]
+#3	shr	cx,1
+#3	rep	movsd
+@3	rep	movsw
+	pop	ds
+	pop	es
+	pop	di
+	pop	si
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I250:
+	mov	ax,6
+$errhandler
+_screensave_setup:
+	mov	word ptr ds:[mr@screensave_ptr],0
+	ret
+_screenrestore:
+	push	ax
+	push	bx
+	push	cx
+	push	si
+	push	di
+	push	es
+	mov	si,word ptr ds:[mr@screensave_ptr]
+	cmp	si,1
+	jl	I251
+	sub	word ptr ds:[mr@screensave_ptr],2
+	dec	si
+	dec	si
+	push	ds
+	mov	ds,word ptr ds:[si+mr@screensave_stack]
+	mov	es,word ptr ss:[mr@screen_seg]
+	mov	ax,80
+	mov	bl,byte ptr ss:[mr@screen_length]
+	mov	bh,0
+	mul	bx
+	mov	cx,ax
+	xor	si,si
+	xor	di,di
+#3	shr	cx,1
+#3	rep	movsd
+@3	rep	movsw
+	mov	bx,ds
+	pop	ds
+	call	_far_mem_free
+	pop	es
+	pop	di
+	pop	si
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I251:
+	mov	ax,6
+$errhandler
+_isleapyear:
+	push	bx
+	push	cx
+	push	dx
+	push	si
+	mov	cx,ax
+	xor	si,si
+	cwd
+	mov	bx,4
+	div	bx
+	or	dx,dx
+	jnz	I252
+	mov	si,-1
+	mov	ax,cx
+	cwd
+	mov	bx,100
+	div	bx
+	or	dx,dx
+	jnz	I252
+	xor	si,si
+	mov	ax,cx
+	cwd
+	mov	bx,400
+	div	bx
+	or	dx,dx
+	jnz	I252
+	mov	si,-1
+I252:
+	mov	ax,si
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	ret
+_soundon:
+	push	ax
+	push	bx
+	push	dx
+	mov	ax,34DCh
+	mov	dx,12h
+	cmp	dx,bx
+	jnc	I254
+	div	bx
+	xchg	ax,bx
+	in	al,61h
+	test	al,03h
+	jnz	I253
+	or	al,03h
+	out	061h,al
+	mov	al,0B6h
+	out	043h,al
+I253:
+	mov	al,bl
+	out	042h,al
+	mov	al,bh
+	out	042h,al
+I254:
+	pop	dx
+	pop	bx
+	pop	ax
+	ret
+_soundoff:
+	push	ax
+	in	al,61h
+	and	al,0FCh
+	out	061h,al
+	pop	ax
+	ret
+_ssin:
+%include _mr@sintable
+	push	bx
+	xchg	ax,bx
+	add	bx,bx
+	mov	ax,word ptr cs:[_mr@sintable+bx]
+	pop	bx
+	ret
+_ssinbx:
+%include _mr@sintable
+	add	bx,bx
+	mov	bx,word ptr cs:[_mr@sintable+bx]
+	ret
+_scos:
+%include _mr@costable
+	push	bx
+	xchg	ax,bx
+	add	bx,bx
+	mov	ax,word ptr cs:[_mr@costable+bx]
+	pop	bx
+	ret
+_scosbx:
+%include _mr@costable
+	add	bx,bx
+	mov	bx,word ptr cs:[_mr@costable+bx]
+	ret
+_mr@sintable:
+	dw	0,18,36,54,71,89,107,125
+	dw	143,160,178,195,213,230,248,265
+	dw	282,299,316,333,350,367,384,400
+	dw	416,433,449,465,481,496,512,527
+	dw	543,558,573,587,602,616,630,644
+	dw	658,672,685,698,711,724,737,749
+	dw	761,773,784,796,807,818,828,839
+	dw	849,859,868,878,887,896,904,912
+	dw	920,928,935,943,949,956,962,968
+	dw	974,979,984,989,994,998,1002,1005
+	dw	1008,1011,1014,1016,1018,1020,1022,1023
+	dw	1023,1024,1024,1024,1023,1023,1022,1020
+	dw	1018,1016,1014,1011,1008,1005,1002,998
+	dw	994,989,984,979,974,968,962,956
+	dw	949,943,935,928,920,912,904,896
+	dw	887,878,868,859,849,839,828,818
+	dw	807,796,784,773,761,749,737,724
+	dw	711,698,685,672,658,644,630,616
+	dw	602,587,573,558,543,527,512,496
+	dw	481,465,449,433,416,400,384,367
+	dw	350,333,316,299,282,265,248,230
+	dw	213,195,178,160,143,125,107,89
+	dw	71,54,36,18,0,-18,-36,-54
+	dw	-71,-89,-107,-125,-143,-160,-178,-195
+	dw	-213,-230,-248,-265,-282,-299,-316,-333
+	dw	-350,-367,-384,-400,-416,-433,-449,-465
+	dw	-481,-496,-512,-527,-543,-558,-573,-587
+	dw	-602,-616,-630,-644,-658,-672,-685,-698
+	dw	-711,-724,-737,-749,-761,-773,-784,-796
+	dw	-807,-818,-828,-839,-849,-859,-868,-878
+	dw	-887,-896,-904,-912,-920,-928,-935,-943
+	dw	-949,-956,-962,-968,-974,-979,-984,-989
+	dw	-994,-998,-1002,-1005,-1008,-1011,-1014,-1016
+	dw	-1018,-1020,-1022,-1023,-1023,-1024,-1024,-1024
+	dw	-1023,-1023,-1022,-1020,-1018,-1016,-1014,-1011
+	dw	-1008,-1005,-1002,-998,-994,-989,-984,-979
+	dw	-974,-968,-962,-956,-949,-943,-935,-928
+	dw	-920,-912,-904,-896,-887,-878,-868,-859
+	dw	-849,-839,-828,-818,-807,-796,-784,-773
+	dw	-761,-749,-737,-724,-711,-698,-685,-672
+	dw	-658,-644,-630,-616,-602,-587,-573,-558
+	dw	-543,-527,-512,-496,-481,-465,-449,-433
+	dw	-416,-400,-384,-367,-350,-333,-316,-299
+	dw	-282,-265,-248,-230,-213,-195,-178,-160
+	dw	-143,-125,-107,-89,-71,-54,-36,-18
+_mr@costable:
+	dw	1024
+	dw	1024,1023,1023,1022,1020,1018,1016,1014
+	dw	1011,1008,1005,1002,998,994,989,984
+	dw	979,974,968,962,956,949,943,935
+	dw	928,920,912,904,896,887,878,868
+	dw	859,849,839,828,818,807,796,784
+	dw	773,761,749,737,724,711,698,685
+	dw	672,658,644,630,616,602,587,573
+	dw	558,543,527,512,496,481,465,449
+	dw	433,416,400,384,367,350,333,316
+	dw	299,282,265,248,230,213,195,178
+	dw	160,143,125,107,89,71,54,36
+	dw	18,0,-18,-36,-54,-71,-89,-107
+	dw	-125,-143,-160,-178,-195,-213,-230,-248
+	dw	-265,-282,-299,-316,-333,-350,-367,-384
+	dw	-400,-416,-433,-449,-465,-481,-496,-512
+	dw	-527,-543,-558,-573,-587,-602,-616,-630
+	dw	-644,-658,-672,-685,-698,-711,-724,-737
+	dw	-749,-761,-773,-784,-796,-807,-818,-828
+	dw	-839,-849,-859,-868,-878,-887,-896,-904
+	dw	-912,-920,-928,-935,-943,-949,-956,-962
+	dw	-968,-974,-979,-984,-989,-994,-998,-1002
+	dw	-1005,-1008,-1011,-1014,-1016,-1018,-1020,-1022
+	dw	-1023,-1023,-1024,-1024,-1024,-1023,-1023,-1022
+	dw	-1020,-1018,-1016,-1014,-1011,-1008,-1005,-1002
+	dw	-998,-994,-989,-984,-979,-974,-968,-962
+	dw	-956,-949,-943,-935,-928,-920,-912,-904
+	dw	-896,-887,-878,-868,-859,-849,-839,-828
+	dw	-818,-807,-796,-784,-773,-761,-749,-737
+	dw	-724,-711,-698,-685,-672,-658,-644,-630
+	dw	-616,-602,-587,-573,-558,-543,-527,-512
+	dw	-496,-481,-465,-449,-433,-416,-400,-384
+	dw	-367,-350,-333,-316,-299,-282,-265,-248
+	dw	-230,-213,-195,-178,-160,-143,-125,-107
+	dw	-89,-71,-54,-36,-18,0,18,36
+	dw	54,71,89,107,125,143,160,178
+	dw	195,213,230,248,265,282,299,316
+	dw	333,350,367,384,400,416,433,449
+	dw	465,481,496,512,527,543,558,573
+	dw	587,602,616,630,644,658,672,685
+	dw	698,711,724,737,749,761,773,784
+	dw	796,807,818,828,839,849,859,868
+	dw	878,887,896,904,912,920,928,935
+	dw	943,949,956,962,968,974,979,984
+	dw	989,994,998,1002,1005,1008,1011,1014
+	dw	1016,1018,1020,1022,1023,1023,1024,1024
+_freestack:
+	mov	ax,sp
+@E	sub	ax,offset end_of_code
+	ret
+_unusedstack:
+%startup _unusedstack_setup
+	pushf
+	cli
+	push	cx
+	push	di
+	push	es
+	push	ss
+	pop	es
+@E	mov	di,offset end_of_code
+#E	xor	di,di
+	mov	al,55h
+	mov	cx,0FFFFh
+	repz	scasb
+	xchg	ax,cx
+	not	ax
+	pop	es
+	pop	di
+	pop	cx
+	popf
+	ret
+_unusedstack_setup:
+	pushf
+	cli
+	push	ax
+	push	cx
+	push	di
+	push	es
+	push	ss
+	pop	es
+@E	mov	di,offset end_of_code
+#E	xor	di,di
+	mov	cx,sp
+@E	sub	cx,di
+	sub	cx,2
+	mov	al,55h
+	rep	stosb
+	pop	es
+	pop	di
+	pop	dx
+	pop	ax
+	popf
+	ret
+_is386:
+	pushf
+	mov	ax,7000h
+	push	ax
+	popf
+	pushf
+	pop	ax
+	and	ax,7000h
+	jnz	I255
+	popf
+	ret
+I255:
+	not	ax
+	popf
+	ret
+_far_mem_resize:
+	push	es
+	push	cx
+	push	dx
+	mov	es,bx
+	mov	cx,ax
+	mov	bx,ax
+@1	shr	bx,1
+@1	shr	bx,1
+@1	shr	bx,1
+@1	shr	bx,1
+#1	shr	bx,4
+	and	al,0fh
+	or	al,al
+	jz	I256
+	inc	bx
+I256:
+	mov	dx,bx
+	mov	ah,4ah
+	int	21h
+	jnc	I259
+	mov	ah,48h
+	mov	bx,dx
+	int	21h
+	jnc	I257
+	jmp	_err_dos
+I257:
+	push	ax
+	push	es
+	push	ds
+	push	es
+	pop	ds
+	mov	es,ax
+	xor	si,si
+	xor	di,di
+	shr	cx,1
+	rep	movsw
+	pop	ds
+	pop	es
+	mov	ah,49h
+	int	21h
+	jnc	I258
+	jmp	_err_dos
+I258:
+	pop	es
+I259:
+	mov	bx,es
+	pop	dx
+	pop	cx
+	pop	es
+	ret
+%include _err_dos
+_far_mem_usage_ax:
+@P	push	bx
+@P@1	push	cx
+@P	mov	ah,48h
+@P	mov	bx,0ffffh
+@P	int	21h
+@P	mov	dx,bx
+@P#1	shr	dx,12
+@P@1	mov	cl,12
+@P@1	shr	dx,cl
+@P	mov	ax,bx
+@P#1	shl	ax,4
+@P@1	mov	cl,4
+@P@1	shl	ax,cl
+@P@1	pop	cx
+@P	pop	bx
+@P	ret
+#P%allocate mr@dpmibuf 48
+#P	push	di
+#P	push	es
+#P	mov	ax,0500h
+#P	push	ds
+#P	pop	es
+#P	mov	edi,offset mr@dpmibuf
+#P	int	31h
+#P	mov	ax,word ptr es:[mr@dpmibuf]
+#P	mov	dx,word ptr es:[mr@dpmibuf+2]
+#P	pop	es
+#P	pop	di
+#P	ret
+_far_mem_usage_bx:
+	push	dx
+	push	ax
+	call	_far_mem_usage_ax
+	mov	cx,dx
+	mov	bx,ax
+	pop	ax
+	pop	dx
+	ret
+_far_mem_free:
+	or	bx,bx
+	jz	I260
+	push	es
+	push	ax
+	mov	es,bx
+	mov	ah,49h
+	int	21h
+	jc	I261
+	pop	ax
+	pop	es
+I260:
+	ret
+I261:
+	jmp	_err_dos
+%include _err_dos
+_hugemalloc:
+	push	ax
+	push	dx
+	xchg	cx,dx
+		mov	cx,4
+I262:
+		clc
+	rcr	dx,1
+	rcr	bx,1
+	loop	short I262
+	inc	bx
+	mov	ah,48h
+	int	21h
+	jc	I263
+	xchg	bx,ax
+	xchg	cx,dx
+	pop	ax
+	pop	dx
+	ret
+I263:
+	jmp	_err_dos
+%include _err_dos
+_farmalloc:
+	push	ax
+	mov	ax,bx
+	clc
+@1	shr	bx,1
+@1	shr	bx,1
+@1	shr	bx,1
+@1	shr	bx,1
+#1	shr	bx,4
+	and	al,0fh
+	or	al,al
+	jz	I264
+	inc	bx
+I264:
+	mov	ah,48h
+	int	21h
+	jc	I265
+	mov	bx,ax
+	pop	ax
+	ret
+I265:
+	jmp	_err_dos
+%include _err_dos
+_file_exist:
+%bundle ffblk
+	push	di
+	call	_find_first
+	or	di,di
+	jz	I267
+I266:
+	call	_find_next
+	or	di,di
+	jnz	I266
+	mov	ax,-1
+	pop	di
+	ret
+I267:
+	xor	ax,ax
+	pop	di
+	ret
+_find_first:
+%allocate mr@DTA 64
+%bundle ffblk
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	si
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	xor	al,al
+	clc
+	call	_str_2_asciiz
+	push	di
+	mov	ah,1ah
+	mov	dx,offset mr@DTA
+	int	21h
+	mov	ah,4eh
+	pop	dx
+	push	dx
+	int	21h
+	jc	I268
+	pop	bx
+	call	_mem_free
+	mov	dx,offset mr@DTA + 1Eh
+	call	_asciiz_2_str
+	push	di
+	mov	si,offset mr@DTA + 15h
+	mov	di,offset b_FFBLK_ATTR
+#S	mov	cx,4
+#S	rep	movsw
+#S	movsb
+@S	mov	cx,9
+@S	rep	movsb
+	pop	di
+	jmp	short I269
+I268:
+	pop	bx
+	call	_mem_free
+	xor	di,di
+	mov	ds:[s_FFBLK_NAME],di
+I269:
+#Z	pop	es
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_find_next:
+%allocate mr@DTA 64
+%bundle ffblk
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	si
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	ah,4fh
+	int	21h
+	jc	I270
+	mov	dx,offset mr@DTA + 1Eh
+	call	_asciiz_2_str
+	push	di
+	mov	si,offset mr@DTA + 15h
+	mov	di,offset b_FFBLK_ATTR
+#S	mov	cx,4
+#S	rep	movsw
+#S	movsb
+@S	mov	cx,9
+@S	rep	movsb
+	pop	di
+	jmp	short I271
+I270:
+	xor	di,di
+	mov	ds:[s_FFBLK_NAME],di
+I271:
+#Z	pop	es
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_words:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	mov	bx,7
+	call	_mem_alloc
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	xor	cx,cx
+	cmp	ax,0
+	jge	I272
+	mov	byte ptr [di],'-'
+	inc	di
+	inc	cx
+	neg	ax
+I272:
+	call	_word2
+	pop	di
+	mov	[di],cx
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_wordu:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	mov	bx,7
+	call	_mem_alloc
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	xor	cx,cx
+	call	_word2
+	pop	di
+	mov	[di],cx
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_word2:
+	mov	bx,10
+	xor	dx,dx
+	div	bx
+	or	ax,ax
+	jz	I273
+	push	dx
+	call	_word2
+	pop	dx
+I273:
+	mov	al,dl
+	or	al,'0'
+	mov	[di],al
+	inc	di
+	inc	cx
+	ret
+_memneartofar:
+	push	bp
+	mov	bp,sp
+	push	si
+	push	di
+	push	es
+	mov	es,[bp+8]
+	mov	di,[bp+6]
+	mov	si,[bp+10]
+	mov	cx,[bp+4]
+#D	mov	ax,si
+#D	add	ax,cx
+#D	jc	I274
+#D	mov	ax,di
+#D	add	ax,cx
+#D	jc	I274
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+	pop	es
+	pop	di
+	pop	si
+	pop	bp
+	ret	8
+#DI274:
+#D	mov	ax,12
+#D$errhandler
+_memfartonear:
+	push	bp
+	mov	bp,sp
+	push	si
+	push	di
+	push	ds
+	push	es
+	push	ds
+	pop	es
+	mov	ds,[bp+10]
+	mov	si,[bp+8]
+	mov	di,[bp+6]
+	mov	cx,[bp+4]
+#D	mov	ax,si
+#D	add	ax,cx
+#D	jc	I275
+#D	mov	ax,di
+#D	add	ax,cx
+#D	jc	I275
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+	pop	es
+	pop	ds
+	pop	di
+	pop	si
+	pop	bp
+	ret	8
+#DI275:
+#D	mov	ax,12
+#D$errhandler
+_farmemcopy:
+	push	bp
+	mov	bp,sp
+	push	si
+	push	di
+	push	ds
+	push	es
+	mov	ds,[bp+12]
+	mov	es,[bp+8]
+	mov	cx,[bp+4]
+	mov	di,[bp+6]
+	mov	si,[bp+10]
+#D	mov	ax,si
+#D	add	ax,cx
+#D	jc	I276
+#D	mov	ax,di
+#D	add	ax,cx
+#D	jc	I276
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+	pop	es
+	pop	ds
+	pop	di
+	pop	si
+	pop	bp
+	ret	10
+#DI276:
+#D	mov	ax,12
+#D$errhandler
+_farmemcopys:
+	push	bp
+	mov	bp,sp
+	push	si
+	push	di
+	push	ds
+	push	es
+	mov	ds,[bp+8]
+	mov	es,[bp+6]
+	mov	cx,[bp+4]
+	xor	si,si
+	xor	di,di
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+	pop	es
+	pop	ds
+	pop	di
+	pop	si
+	pop	bp
+	ret	6
+_hex32:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	mov	bx,10
+	call	_mem_alloc
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	mov	bl,dh
+	call	_hex
+	mov	bl,dl
+	call	_hex
+	mov	bl,ah
+	call	_hex
+	mov	bl,al
+	call	_hex
+	pop	di
+	mov	word ptr ds:[di],8
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_hex16:
+	push	ax
+	push	bx
+	push	cx
+	mov	bx,6
+	call	_mem_alloc
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	mov	bl,ah
+	call	_hex
+	mov	bl,al
+	call	_hex
+	pop	di
+	mov	word ptr ds:[di],4
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_hex8:
+	push	ax
+	push	bx
+	push	cx
+	mov	bx,4
+	call	_mem_alloc
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	mov	bl,al
+	call	_hex
+	pop	di
+	mov	word ptr ds:[di],2
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_hex:
+	push	ax
+	push	bx
+@1	shr	bl,1
+@1	shr	bl,1
+@1	shr	bl,1
+@1	shr	bl,1
+#1	shr	bl,4
+	call	_nybble
+	pop	bx
+	call	_nybble
+	pop	ax
+	ret
+_nybble:
+	and	bx,0fh
+	mov	al,byte ptr cs:[bx+mr@nybtab]
+	mov	ds:[di],al
+	inc	di
+	ret
+	mr@nybtab: db '0123456789abcdef'
+_tty:
+	push	ax
+	push	dx
+	mov	dl,al
+	mov	ah,02h
+	int	21h
+	pop	dx
+	pop	ax
+	ret
+_tty_cr:
+	mov	al,13
+	call	_tty
+	mov	al,10
+	jmp	_tty
+%include _tty
+_inkey:
+	push	dx
+	mov	ah,06h
+	mov	dl,0ffh
+	int	21h
+	jz	I277
+	mov	ah,0
+	pop	dx
+	ret
+I277:
+	mov	ax,-1
+	pop	dx
+	ret
+_keyboard_input:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	mov	dx,bx
+	add	bx,2
+	call	_mem_alloc
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	xor	bx,bx
+	cmp	cl,' '
+	jz	I280
+	push	cx
+	mov	al,cl
+	mov	cx,dx
+I278:
+	call	_tty
+	loop	I278
+	mov	al,8
+	mov	cx,dx
+I279:
+	call	_tty
+	loop	I279
+	pop	cx
+I280:
+	mov	ah,07h
+	int	21h
+	cmp	al,' '
+	jae	I282
+	cmp	al,13
+	jz	I283
+	cmp	al,8
+	jz	I281
+	jmp	short I280
+I281:
+	or	bx,bx
+	jz	I280
+	dec	bx
+	dec	di
+	mov	al,8
+	call	_tty
+	mov	al,cl
+	call	_tty
+	mov	al,8
+	call	_tty
+	jmp	short I280
+I282:
+	cmp	bx,dx
+	jz	I280
+	mov	[di],al
+	inc	bx
+	inc	di
+	call	_tty
+	jmp	short I280
+I283:
+	pop	di
+	push	di
+	mov	[di],bx
+	mov	si,di
+	call	_str_copy
+	pop	bx
+	call	_mem_free
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_doublewords:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	si
+	mov	bx,13
+	call	_mem_alloc
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	xor	si,si
+	cmp	dx,0
+	jge	I284
+	push	ax
+	mov	byte ptr [di],'-'
+	inc	si
+	inc	di
+	pop	ax
+	neg	dx
+	neg	ax
+	sbb	dx,0
+I284:
+	call	_doubleword2
+	pop	di
+	mov	word ptr [di],si
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_doublewordu:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	si
+	mov	bx,12
+	call	_mem_alloc
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	xor	si,si
+	call	_doubleword2
+	pop	di
+	mov	word ptr [di],si
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_doubleword2:
+	call	_doubleword_div10
+	cmp	ax,dx
+	jnz	I285
+	or	ax,ax
+	jz	I286
+I285:
+	push	bx
+	call	_doubleword2
+	pop	bx
+I286:
+	mov	al,bl
+	or	al,'0'
+	mov	[di],al
+	inc	di
+	inc	si
+	ret
+_doubleword_div10:
+	mov	cx,10
+	mov	bx,ax
+	xchg	ax,dx
+	xor	dx,dx
+	div	cx
+	xchg	bx,ax
+	div	cx
+	xchg	dx,bx
+	ret
+_div32_w16:
+	push	bx
+	push	cx
+	mov	ax,[si]
+	mov	dx,[si+2]
+	mov	bx,[di]
+	xchg	cx,dx
+	xchg	ax,cx
+	sub	dx,dx
+	div	bx
+	xchg	cx,ax
+	div	bx
+	mov	dx,cx
+	pop	cx
+	pop	bx
+	ret
+_386_div32_w16:
+	db	66h
+	push	bx ; push ebx
+	db	66h,8bh,04h ; mov eax,[si]
+	db	66h,0fh,0bfh,1dh ; movsx ebx,word ptr [di]
+	db	66h,0f7h,0fbh ; idiv ebx
+	mov	dx,ax
+	db	66h,0c1h,0e8h,10h ; shr eax,16
+	xchg	ax,dx
+	db	66h
+	pop	bx ; pop ebx
+	ret
+_mul32:
+	push	bp
+	mov	bp,sp
+	sub	sp,8
+	push	bx
+	push	cx
+	push	si
+	push	di
+	mov	ax,[si]
+	mov	dx,[si+2]
+	mov	bx,[di]
+	mov	cx,[di+2]
+	mov	di,dx
+	mov	si,ax
+	mul	bx
+	mov	[bp-2],ax
+	mov	[bp-4],dx
+	mov	ax,di
+	mul	cx
+	mov	[bp-6],ax
+	mov	[bp-8],dx
+	mov	ax,di
+	mul	bx
+	add	[bp-4],ax
+	adc	[bp-6],dx
+	adc	word ptr [bp-8],0
+	mov	ax,si
+	mul	cx
+	add	[bp-4],ax
+	adc	[bp-6],dx
+	adc	word ptr [bp-8],0
+	mov	dx,[bp-4]
+	mov	ax,[bp-2]
+	pop	di
+	pop	si
+	pop	cx
+	pop	bx
+	mov	sp,bp
+	pop	bp
+	ret
+_386_mul32:
+	db	66h
+	push	bx ; push ebx
+	db	66h,8bh,04h ; mov eax,[si]
+	db	66h,8bh,1dh ; mov ebx,[di]
+	db	66h,0f7h,0ebh ; imul ebx
+	mov	dx,ax
+	db	66h,0c1h,0e8h,10h ; shr eax,16
+	xchg	ax,dx
+	db	66h
+	pop	bx ; pop ebx
+	ret
+_div32:
+	push	bp
+	mov	bp,sp
+	push	di
+	push	si
+	push	bx
+	xor	di,di
+	mov	ax,[bp+6]
+	or	ax,ax
+	jnl	I287
+	inc	di
+	mov	dx,[bp+4]
+	neg	ax
+	neg	dx
+	sbb	ax,0
+	mov	[bp+6],ax
+	mov	[bp+4],dx
+I287:
+	mov	ax,[bp+10]
+	or	ax,ax
+	jnl	I288
+	inc	di
+	mov	dx,[bp+8]
+	neg	ax
+	neg	dx
+	sbb	ax,0
+	mov	[bp+10],ax
+	mov	[bp+8],dx
+I288:
+	or	ax,ax
+	jnz	I289
+	mov	cx,[bp+8]
+	mov	ax,[bp+6]
+	xor	dx,dx
+	div	cx
+	mov	bx,ax
+	mov	ax,[bp+4]
+	div	cx
+	mov	dx,bx
+	jmp	short I293
+I289:
+	mov	bx,ax
+	mov	cx,[bp+8]
+	mov	dx,[bp+6]
+	mov	ax,[bp+4]
+I290:
+	shr	bx,1
+	rcr	cx,1
+	shr	dx,1
+	rcr	ax,1
+	or	bx,bx
+	jnz	I290
+	div	cx
+	mov	si,ax
+	mul	word ptr [bp+10]
+	xchg	ax,cx
+	mov	ax,[bp+8]
+	mul	si
+	add	dx,cx
+	jc	I291
+	cmp	dx,[bp+6]
+	jnbe	I291
+	jc	I292
+	cmp	ax,[bp+4]
+	jbe	I292
+I291:
+	dec	si
+I292:
+	xor	dx,dx
+	xchg	ax,si
+I293:
+	dec	di
+	jnz	I294
+	neg	dx
+	neg	ax
+	sbb	dx,0
+I294:
+	pop	bx
+	pop	si
+	pop	di
+	pop	bp
+	ret	8
+_memcopy:
+	push	bp
+	mov	bp,sp
+	push	si
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	cx,[bp+4]
+	mov	di,[bp+6]
+	mov	si,[bp+8]
+#D	mov	ax,si
+#D	add	ax,cx
+#D	jc	I295
+#D	mov	ax,di
+#D	add	ax,cx
+#D	jc	I295
+	shr	cx,1
+	rep	movsw
+	adc	cx,cx
+	rep	movsb
+#Z	pop	es
+	pop	di
+	pop	si
+	pop	bp
+	ret	6
+#DI295:
+#D	mov	ax,12
+#D$errhandler
+_cmdline:
+	push	ax
+	push	bx
+	push	cx
+	push	ds
+	push	es
+#E	mov	es,word ptr ds:[mr@psp]
+@E	push	cs
+@E	pop	es
+	mov	bl,es:[080h]
+	or	bl,bl
+	jz	I297
+	xor	bh,bh
+	add	bx,2
+	call	_mem_alloc
+	push	di
+	push	ds
+	pop	es
+#E	mov	ds,word ptr ds:[mr@psp]
+@E	push	cs
+@E	pop	ds
+	mov	cl,ds:[080h]
+	xor	ch,ch
+	mov	es:[di],cx
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	mov	si,81h
+	rep	movsb
+	pop	di
+I296:
+	pop	es
+	pop	ds
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+I297:
+	xor	di,di
+	jmp	short I296
+_drawwindow:
+%allocate mr@screenchar 4
+	push	bp
+	mov	bp,sp
+	sub	sp,10
+	mov	si,[bp+20]
+	call	_str_copy
+	mov	[bp-10],di
+	mov	word ptr ds:[mr@screenchar],1
+	call	_curp_get
+	push	dx
+	mov	dl,byte ptr [bp+18]
+	mov	dh,byte ptr [bp+16]
+	call	_curp_set
+	mov	al,byte ptr [bp+10]
+	mov	byte ptr ss:[mr@current_fore],al
+	mov	al,byte ptr [bp+8]
+	mov	byte ptr ss:[mr@current_back],al
+	mov	ax,[bp+14]
+	mov	bx,[bp-10]
+	sub	ax,ds:[bx]
+	shr	ax,1
+	or	ax,ax
+	jle	short I298
+	mov	cx,ax
+	call	_str_space
+	push	di
+	mov	si,word ptr [bp-10]
+	call	_str_conc
+	pop	bx
+	call	_mem_free
+	mov	bx,[bp-10]
+	call	_mem_free
+	mov	[bp-10],di
+I298:
+	mov	cx,80
+	call	_str_space
+	push	di
+	mov	si,di
+	mov	di,word ptr [bp-10]
+	call	_str_conc
+	pop	bx
+	call	_mem_free
+	mov	bx,[bp-10]
+	call	_mem_free
+	mov	[bp-10],di
+	mov	si,[bp-10]
+	mov	cx,[bp+14]
+	call	_str_left
+	push	di
+$outstream
+	pop	bx
+	call	_mem_free
+	mov	ax,[bp+16]
+	add	ax,[bp+12]
+	dec	ax
+	mov	[bp-2],ax
+	mov	ax,[bp+14]
+#S	sub	ax,2
+@S	dec	ax
+@S	dec	ax
+	mov	[bp-4],ax
+	mov	ax,[bp+16]
+	inc	ax
+	mov	[bp-6],ax
+I299:
+	mov	dl,byte ptr [bp+18]
+	mov	dh,byte ptr [bp-6]
+	call	_curp_set
+	mov	al,byte ptr [bp+6]
+	mov	byte ptr ss:[mr@current_fore],al
+	mov	al,byte ptr [bp+4]
+	mov	byte ptr ss:[mr@current_back],al
+	mov	di,offset mr@screenchar
+	mov	byte ptr ds:[di+2],'º'
+$outstream
+	mov	cx,[bp-4]
+	call	_str_space
+	push	di
+$outstream
+	pop	bx
+	call	_mem_free
+	mov	di,offset mr@screenchar
+$outstream
+	mov	byte ptr ss:[mr@current_back],0
+	mov	di,offset mr@screenchar
+	mov	byte ptr ds:[di+2],32
+$outstream
+	mov	ax,[bp-6]
+	inc	ax
+	cmp	ax,[bp-2]
+	jg	I300
+	mov	[bp-6],ax
+	jmp	short I299
+I300:
+	mov	ax,[bp+16]
+	add	ax,[bp+12]
+	mov	[bp-8],ax
+	mov	dl,byte ptr [bp+18]
+	mov	dh,byte ptr [bp-8]
+	call	_curp_set
+	mov	al,byte ptr [bp+6]
+	mov	byte ptr ss:[mr@current_fore],al
+	mov	al,byte ptr [bp+4]
+	mov	byte ptr ss:[mr@current_back],al
+	mov	di,offset mr@screenchar
+	mov	byte ptr ds:[di+2],'È'
+$outstream
+	mov	si,offset mr@screenchar
+	mov	byte ptr ds:[si+2],'Í'
+	mov	cx,[bp-4]
+	call	_str_repstr
+	push	di
+$outstream
+	pop	bx
+	call	_mem_free
+	mov	di,offset mr@screenchar
+	mov	byte ptr ds:[di+2],'¼'
+$outstream
+	mov	byte ptr ss:[mr@current_back],0
+	mov	di,offset mr@screenchar
+	mov	byte ptr ds:[di+2],32
+$outstream
+	mov	dl,byte ptr [bp+18]
+	inc	dl
+	mov	dh,byte ptr [bp-8]
+	inc	dh
+	call	_curp_set
+	mov	cx,[bp+14]
+	call	_str_space
+	push	di
+$outstream
+	pop	bx
+	call	_mem_free
+	mov	bx,[bp-10]
+	call	_mem_free
+	pop	dx
+	call	_curp_set
+	mov	sp,bp
+	pop	bp
+	ret	18
+_getenviron:
+	push	ax
+	push	bx
+	push	bp
+	push	si
+	push	es
+	call	_str_ucase
+	mov	bp,di
+@E	push	cs
+@E	pop	es
+#E	mov	es,word ptr ds:[mr@psp]
+	mov	bx,es:[2ch]
+	mov	es,bx
+	xor	di,di
+I301:
+	mov	si,bp
+	lodsw
+	xchg	cx,ax
+I302:
+	mov	al,es:[di]
+	inc	di
+	cmp	al,'a'
+	jb	I303
+	cmp	al,'z'
+	ja	I303
+	and	al,0DFh
+I303:
+	cmp	al,ds:[si]
+	jnz	I304
+	inc	si
+	loop	I302
+	cmp	byte ptr es:[di],'='
+	jnz	I304
+	inc	di
+	push	di
+	mov	cx,7fffh
+	xor	al,al
+	repnz	scasb
+	mov	bx,8001h
+	sub	bx,cx
+	call	_mem_alloc
+	lea	cx,[bx-2]
+	mov	[di],cx
+	pop	si
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	push	ds
+	push	es
+	push	ds
+	pop	es
+	pop	ds
+	rep	movsb
+	pop	ds
+	pop	di
+	jmp	I306
+I304:
+	xor	al,al
+	mov	cx,7fffh
+	repnz	scasb
+	scasb
+	jz	I305
+	dec	di
+	jmp	short I301
+I305:
+	xor	di,di
+I306:
+	pop	es
+	pop	si
+	pop	bp
+	pop	bx
+	pop	ax
+	ret
+_err_msg:
+#D%ss mr@indent dw 1 dup (?)
+#D	push	sp
+#D	push	ss
+#D	push	es
+#D	push	ds
+#D	push	cs
+#D	push	bp
+#D	push	di
+#D	push	si
+#D	push	dx
+#D	push	cx
+#D	push	bx
+#D	push	ax
+#C	push	ax
+#C	mov	ax,word ptr cs:[mr@critical_err]
+#C	or	ax,ax
+#C	jz	I307
+#C	pop	bx
+#C	add	ax,119
+#C	push	ax
+#CI307:
+#C	pop	ax
+#M	push	ax
+	call	_cprint
+	db	13,10,13,10
+#L	db	'MoonRock r'
+@L	db	'R'
+	db	'untime error #',0
+	call	_err_wordu
+#M	pop	ax
+#M	mov	cx,ax
+#M	mov	si,offset mr@err_table
+#M	push	cs
+#M	pop	ds
+#MI308:
+#M	lodsb
+#M	or	al,al
+#M	jnz	I308
+#M	lodsb
+#M	or	al,al
+#M	jz	I311
+#M	cmp	al,cl
+#M	jnz	I308
+#M	call	_cprint
+#M	db	'  [',0
+#MI309:
+#M	lodsb
+#M	or	al,al
+#M	jz	I310
+#M	call	_tty
+#M	jmp	short I309
+#MI310:
+#M	call	_cprint
+#M	db	']',0
+#MI311:
+	call	_cprint
+	db	13,10,0
+#D	mov	word ptr ss:[mr@indent],20
+#D	call	_cprint
+#D	db	'Function track dump:',13,10,0
+#D	mov	bx,offset mr@func + 40
+#D	mov	cx,21
+#DI312:
+#D	mov	si,ss:[bx]
+#D	or	si,si
+#D	jz	I318
+#D	cmp	si,-1
+#D	jnz	I314
+#D	mov	ax,word ptr ss:[mr@indent]
+#D	sub	ax,2
+#D	jnc	I313
+#D	xor	ax,ax
+#DI313:
+#D	mov	word ptr ss:[mr@indent],ax
+#D	sub	bx,2
+#D	loop	I312
+#D	jmp	short I319
+#DI314:
+#D	add	word ptr ss:[mr@indent],2
+#D	push	cx
+#D	mov	cx,word ptr ss:[mr@indent]
+#DI315:
+#D	mov	ah,2
+#D	mov	dl,' '
+#D	int	21h
+#D	loop	I315
+#D	pop	cx
+#DI316:
+#D	mov	al,cs:[si]
+#D	or	al,al
+#D	jz	I317
+#D	call	_tty
+#D	inc	si
+#D	jmp	short I316
+#DI317:
+#D	call	_cprint
+#D	db	13,10,0
+#DI318:
+#D	sub	bx,2
+#D	loop	I312
+#DI319:
+#D	call	_cprint
+#D	db	13,10,0
+#D	call	_cprint
+#D	db 'Source: ',0
+#D	push	ds
+#D	push	cs
+#D	pop	ds
+@I#D	mov	di,offset mr@sourcefile
+#I#D	mov	di,word ptr cs:[mr@sourcefile]
+#D	call	_tty_str_dos
+#D	pop	ds
+#D	call	_cprint
+#D	db ' ',' Line: ',0
+#D	mov	ax,word ptr ss:[mr@line]
+#D	call	_err_wordu
+#D	call	_cprint
+#D	db	13,10,0
+#D	mov	si,offset mr@regtable
+#D	mov	cx,12
+#DI320:
+#D	push	cs
+#D	pop	ds
+#D	lodsb
+#D	call	_tty
+#D	lodsb
+#D	call	_tty
+#D	mov	al,'='
+#D	call	_tty
+#D	pop	bx
+#D	call	_hex16_con
+#D	mov	al,' '
+#D	call	_tty
+#D	cmp	cx,4
+#D	jz	I321
+#D	call	_tty
+#DI321:
+#D	loop	I320
+@R	mov	ds,word ptr ss:[mr@ds]
+	jmp	_exit
+#Dmr@regtable:
+#D	db	'AXBXCXDXSIDIBPCSDSESSSSP'
+mr@err_table:
+#M	db	0,1,'MCB corrupt'
+#M	db	0,2,'invalid pointer to free'
+#D	db	0,3,'overflow'
+#M	db	0,4,'invalid file handle'
+#M	db	0,5,'out of near memory'
+#M	db	0,6,'invalid function call'
+#D	db	0,7,'array element out of bounds'
+#M	db	0,8,'read past end of file'
+#P	db	0,10,'error initialising protected mode'
+#D#M	db	0,11,'divide overflow'
+#D#M	db	0,12,'segment boundary overrun'
+#M	db	0,13,'unsupported screen mode'
+@R#M	db	0,100,'unknown critical error'
+@R#M	db	0,102,'file not found'
+@R#M	db	0,103,'path not found'
+@R#M	db	0,105,'access denied'
+@R#M	db	0,108,'out of far memory'
+@R#M	db	0,119,'write protect violation'
+@R#M	db	0,121,'drive not ready'
+@R#M	db	0,131,'general failure'
+@R#M	db	0,132,'sharing violation'
+@R#M	db	0,133,'lock violation'
+@R#M	db	0,139,'insufficient disk space'
+#M	db	0,0
+_err_overflow:
+	mov	ax,3
+$errhandler
+_err_wordu:
+	mov	bx,10
+	xor	dx,dx
+	div	bx
+	or	ax,ax
+	jz	I322
+	push	dx
+	call	_err_wordu
+	pop	dx
+I322:
+	or	dl,'0'
+	mov	ah,02h
+	int	21h
+	ret
+_err_dos:
+	cmp	ax,13
+	jb	I323
+	mov	ah,59h
+	xor	bx,bx
+	int	21h
+I323:
+	add	ax,100
+$errhandler
+_err_bound:
+	mov	ax,7
+$errhandler
+_err_div0:
+	mov	ax,11
+$errhandler
+_str_instr:
+	push	bp
+	mov	bp,sp
+	sub	sp,16
+	push	bx
+	push	cx
+	push	dx
+	push	si
+	push	di
+	mov	[bp-2],di
+	mov	[bp-4],si
+	cmp	word ptr [di],0
+	jnz	I324
+	mov	word ptr [bp-6],0
+	jmp	I335
+I324:
+	cmp	word ptr [si],0
+	jnz	I325
+	mov	word ptr [bp-6],1
+	jmp	I335
+I325:
+	mov	bx,[bp-2]
+	mov	ax,ds:[bx]
+	mov	[bp-8],ax
+	mov	bx,[bp-4]
+	mov	ax,ds:[bx]
+	mov	[bp-10],ax
+	mov	word ptr [bp-12],0
+	mov	di,[bp-4]
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	mov	dl,byte ptr ds:[di]
+	mov	word ptr [bp-12],0
+I326:
+	mov	si,[bp-2]
+	add	si,[bp-12]
+	lodsw
+	xor	cx,cx
+	mov	ax,[bp-12]
+	mov	[bp-16],ax
+I327:
+	cmp	dl,byte ptr ds:[si]
+	jnz	short I328
+	mov	cx,-1
+	mov	ax,word ptr [bp-16]
+	mov	word ptr [bp-12],ax
+	jmp	I329
+I328:
+	inc	si
+	mov	ax,[bp-16]
+	inc	ax
+	cmp	ax,[bp-8]
+	jg	I329
+	mov	[bp-16],ax
+	jmp	short I327
+I329:
+	test	cx,cx
+	jnz	short I330
+	mov	word ptr [bp-6],0
+	jmp	I335
+I330:
+	mov	ax,[bp-16]
+	inc	ax
+	mov	[bp-6],ax
+	mov	di,[bp-4]
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	mov	cx,-1
+	mov	word ptr [bp-16],1
+I331:
+	mov	al,byte ptr ds:[si]
+	cmp	al,byte ptr ds:[di]
+	jz	short I332
+	xor	cx,cx
+	jmp	I333
+I332:
+	inc	si
+	inc	di
+	mov	ax,[bp-16]
+	inc	ax
+	cmp	ax,[bp-10]
+	jg	I333
+	mov	[bp-16],ax
+	jmp	I331
+I333:
+	cmp	cx,-1
+	jz	short I335
+	mov	ax,[bp-12]
+	inc	ax
+	cmp	ax,[bp-8]
+	jg	I334
+	mov	[bp-12],ax
+	jmp	I326
+I334:
+	mov	word ptr [bp-6],0
+I335:
+	mov	ax,[bp-6]
+	pop	di
+	pop	si
+	pop	dx
+	pop	cx
+	pop	bx
+	mov	sp,bp
+	pop	bp
+	ret
+_str_copy_qb:
+	push	bx
+	push	cx
+	push	ds
+	push	es
+	mov	es,word ptr cs:[mr@their_ds]
+	mov	cx,es:[si]
+	jcxz	I337
+	mov	bx,cx
+	add	bx,2
+	call	_mem_alloc
+	mov	[di],cx
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	push	ds
+	pop	es
+	mov	ds,word ptr cs:[mr@their_ds]
+	mov	si,[si+2]
+@S	rep	movsb
+#S#3	mov	ax,cx
+#S#3	and	ax,3
+#S#3	shr	cx,2
+#S#3	rep	movsd
+#S#3	add	cx,ax
+#S#3	rep	movsb
+#S@3	shr	cx,1
+#S@3	rep	movsw
+#S@3	adc	cx,cx
+#S@3	rep	movsb
+	pop	di
+I336:
+	pop	es
+	pop	ds
+	pop	bx
+	pop	cx
+	ret
+I337:
+	xor	di,di
+	jmp	short I336
+_keystatus:
+%startup _install09
+	push	bx
+	xor	bh,bh
+	mov	al,byte ptr cs:[mr@keytable+bx]
+	cbw
+	pop	bx
+	ret
+_install09:
+%cleanup _restore09
+%include _int09
+	push	ds
+	push	es
+	mov	ax,3509h
+	int	21h
+	mov	word ptr cs:[mr@oldint09],bx
+	mov	word ptr cs:[mr@oldint09+2],es
+	mov	ax,2509h
+	mov	dx,offset _int09
+	push	cs
+	pop	ds
+	int	21h
+	push	cs
+	pop	es
+	xor	ax,ax
+	mov	di,offset mr@keytable
+	mov	cx,64
+	rep	stosw
+	pop	es
+	pop	ds
+	ret
+_restore09:
+	push	ax
+	push	dx
+	push	ds
+	mov	ax,2509h
+	mov	dx,word ptr cs:[mr@oldint09]
+	mov	ds,word ptr cs:[mr@oldint09+2]
+	int	21h
+	pop	ds
+	pop	dx
+	pop	ax
+	ret
+_int09:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	push	di
+	push	ds
+	push	es
+	in	al,60h
+	mov	di,offset mr@scanexception
+	mov	cx,mr@scanexceptionend - mr@scanexception
+	push	cs
+	pop	es
+	repnz	scasb
+	jnz	I339
+I338:
+	pop	es
+	pop	ds
+	pop	di
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	db	0eah
+mr@oldint09:
+	dd	?
+I339:
+	mov	bl,al
+	and	bx,07fh
+	mov	dl,al
+	xor	dh,dh
+	and	dl,80h
+	rol	dl,1
+	dec	dl
+	mov	byte ptr cs:[mr@keytable+bx],dl
+	jmp	short I338
+mr@scanexception:
+	db	000h,0E0h,0E1h,0EEh,0F0h,0FAh,0FCh,0FDh,0FEh,0FFh
+mr@scanexceptionend:
+	mr@keytable	db 128 dup (?)
+_mytick:
+%startup _install08
+%allocate mr@mytick 4
+	mov	ax,ds:[mr@mytick]
+	mov	dx,ds:[mr@mytick+2]
+	ret
+_install08:
+%cleanup _restore08
+%include _int08
+	push	ax
+	push	es
+	xor	ax,ax
+	mov	es,ax
+	mov	ax,word ptr es:[08h*4]
+	mov	word ptr cs:[mr@oldint08],ax
+	mov	ax,word ptr es:[08h*4+2]
+	mov	word ptr cs:[mr@oldint08+2],ax
+	cli
+	mov	word ptr es:[08h*4],offset _int08
+	mov	word ptr es:[08h*4+2],cs
+	sti
+	pop	es
+	pop	ax
+	ret
+_restore08:
+	push	ax
+	push	es
+	xor	ax,ax
+	mov	es,ax
+	mov	ax,word ptr cs:[mr@oldint08]
+	mov	word ptr es:[08h*4],ax
+	mov	ax,word ptr cs:[mr@oldint08+2]
+	mov	word ptr es:[08h*4+2],ax
+	pop	es
+	pop	ax
+	ret
+_int08:
+	pushf
+@3	add	word ptr ds:[mr@mytick],1
+@3	adc	word ptr ds:[mr@mytick+2],0
+#3	inc	dword ptr ds:[mr@mytick],1
+	popf
+	db	0eah
+mr@oldint08:
+	dd	?
+_drawwindow2:
+%allocate mr@screenchar 4
+	push	bp
+	mov	bp,sp
+	sub	sp,6
+	mov	word ptr ds:[mr@screenchar],1
+	call	_curp_get
+	push	dx
+	mov	dl,byte ptr [bp+14]
+	mov	dh,byte ptr [bp+12]
+	call	_curp_set
+	mov	ax,[bp+10]
+	sub	ax,2
+	mov	[bp-2],ax
+	mov	byte ptr ss:[mr@current_fore],0
+	mov	al,byte ptr [bp+4]
+	mov	byte ptr ss:[mr@current_back],al
+	mov	di,offset mr@screenchar
+	mov	byte ptr ds:[di+2],'Ú'
+$outstream
+	mov	si,offset mr@screenchar
+	mov	byte ptr ds:[si+2],'Ä'
+	mov	cx,[bp-2]
+	call	_str_repstr
+	push	di
+$outstream
+	pop	bx
+	call	_mem_free
+	mov	al,byte ptr [bp+6]
+	mov	byte ptr ss:[mr@current_fore],al
+	mov	al,byte ptr [bp+4]
+	mov	byte ptr ss:[mr@current_back],al
+	mov	di,offset mr@screenchar
+	mov	byte ptr ds:[di+2],'¿'
+$outstream
+	mov	ax,[bp+8]
+	dec	ax
+	mov	[bp-4],ax
+	mov	word ptr [bp-6],1
+I340:
+	inc	word ptr [bp+12]
+	mov	dl,byte ptr [bp+14]
+	mov	dh,byte ptr [bp+12]
+	call	_curp_set
+	mov	byte ptr ss:[mr@current_fore],0
+	mov	al,byte ptr [bp+4]
+	mov	byte ptr ss:[mr@current_back],al
+	mov	di,offset mr@screenchar
+	mov	byte ptr ds:[di+2],'³'
+$outstream
+	mov	cx,[bp-2]
+	call	_str_space
+	push	di
+$outstream
+	pop	bx
+	call	_mem_free
+	mov	al,byte ptr [bp+6]
+	mov	byte ptr ss:[mr@current_fore],al
+	mov	al,byte ptr [bp+4]
+	mov	byte ptr ss:[mr@current_back],al
+	mov	di,offset mr@screenchar
+	mov	byte ptr ds:[di+2],'³'
+$outstream
+	mov	ax,[bp-6]
+	inc	ax
+	cmp	ax,[bp-4]
+	jg	I341
+	mov	[bp-6],ax
+	jmp	I340
+I341:
+	inc	word ptr [bp+12]
+	mov	dl,byte ptr [bp+14]
+	mov	dh,byte ptr [bp+12]
+	call	_curp_set
+	mov	byte ptr ss:[mr@current_fore],0
+	mov	al,byte ptr [bp+4]
+	mov	byte ptr ss:[mr@current_back],al
+	mov	di,offset mr@screenchar
+	mov	byte ptr ds:[di+2],'À'
+$outstream
+	mov	al,byte ptr [bp+6]
+	mov	byte ptr ss:[mr@current_fore],al
+	mov	al,byte ptr [bp+4]
+	mov	byte ptr ss:[mr@current_back],al
+	mov	si,offset mr@screenchar
+	mov	byte ptr ds:[si+2],'Ä'
+	mov	cx,[bp-2]
+	call	_str_repstr
+	push	di
+$outstream
+	pop	bx
+	call	_mem_free
+	mov	di,offset mr@screenchar
+	mov	byte ptr ds:[di+2],'Ù'
+$outstream
+	pop	dx
+	call	_curp_set
+	mov	sp,bp
+	pop	bp
+	ret	12
+_tty_str_direct:
+%startup _tty_str_direct_setup
+%startuppm _tty_str_direct_setup_pm
+@1	push	ax
+@1	push	bx
+@1	push	cx
+@1	push	dx
+@1	push	si
+@1	push	di
+@1	push	bp
+@1	push	ds
+@1	push	es
+#1	pusha
+#1	push	ds
+#1	push	es
+	push	ds
+	pop	es
+	mov	ds,word ptr ss:[mr@screen_seg]
+	mov	bl,byte ptr ss:[mr@current_back]
+@1	shl	bl,1
+@1	shl	bl,1
+@1	shl	bl,1
+@1	shl	bl,1
+#1	shl	bl,4
+	mov	cl,byte ptr ss:[mr@current_fore]
+	cmp	cl,16
+	jb	I342
+	or	bl,80h
+	and	cl,0fh
+I342:
+	or	bl,cl
+	mov	bh,byte ptr ss:[mr@current_page]
+	mov	ah,03h
+	int	10h
+	mov	bp,es:[di]
+	or	bp,bp
+	jz	I346
+	inc	di
+	inc	di
+I343:
+	mov	al,es:[di]
+	cmp	al,32
+	jb	I347
+I344:
+	xor	cl,cl
+	mov	ch,dh
+	shr	cx,1
+	mov	si,cx
+@1	shr	si,1
+@1	shr	si,1
+#1	shr	si,2
+	add	si,cx
+	xor	ch,ch
+	mov	cl,dl
+	shl	cx,1
+	add	si,cx
+	mov	ah,bl
+	mov	[si],ax
+	inc	dl
+	cmp	dl,80
+	jb	I345
+	xor	dl,dl
+	jmp	short I349
+I345:
+	inc	di
+	dec	bp
+	jnz	I343
+	mov	ah,02h
+	int	10h
+I346:
+@1	pop	es
+@1	pop	ds
+@1	pop	bp
+@1	pop	di
+@1	pop	si
+@1	pop	dx
+@1	pop	cx
+@1	pop	bx
+@1	pop	ax
+#1	pop	es
+#1	pop	ds
+#1	popa
+	ret
+I347:
+	cmp	al,13
+	jz	I348
+	cmp	al,10
+	jz	I349
+	cmp	al,7
+	jnz	I344
+	push	dx
+	mov	ah,02h
+	mov	dl,7
+	int	21h
+	pop	dx
+	jmp	short I345
+I348:
+	mov	dl,0
+	jmp	short I345
+I349:
+	inc	dh
+	cmp	dh,byte ptr ss:[mr@screen_length]
+	jb	I345
+	push	es
+	push	si
+	push	di
+	push	ds
+	pop	es
+	mov	si,160
+	xor	di,di
+	mov	cx,word ptr ss:[mr@screen_scroll]
+@3	rep	movsw
+#3	rep	movsd
+	mov	cx,80
+	mov	ah,bl
+	mov	al,0
+	rep	stosw
+	pop	di
+	pop	si
+	pop	es
+	dec	dh
+	jmp	short I345
+_tty_str_direct_setup:
+	push	es
+	mov	al,0
+	mov	byte ptr ss:[mr@current_page],al
+	mov	byte ptr ss:[mr@current_back],al
+	mov	byte ptr ss:[mr@current_fore],7
+	mov	byte ptr ss:[mr@screen_length],25
+	mov	dx,3ceh
+	mov	al,6
+	out	dx,al
+	inc	dl
+	in	al,dx
+#1	shr	al,2
+@1	shr	al,1
+@1	shr	al,1
+	and	al,03h
+	mov	bl,al
+	mov	bh,0
+	add	bx,bx
+	mov	ax,word ptr cs:[mr@seglist+bx]
+	mov	word ptr ss:[mr@screen_seg],ax
+	mov	ah,0fh
+	int	10h
+	cmp	al,7
+	jnz	I350
+	mov	word ptr ss:[mr@screen_seg],0b000h
+I350:
+	mov	ax,2b01h
+	mov	cx,4445h
+	mov	dx,5351h
+	int	21h
+	cmp	al,0ffh
+	jz	I351
+	mov	es,word ptr ss:[mr@screen_seg]
+	xor	di,di
+	mov	ah,0feh
+	int	10h
+	mov	word ptr ss:[mr@screen_seg],es
+I351:
+	mov	ax,040h
+	mov	es,ax
+	mov	al,byte ptr es:[084h]
+	inc	ax
+	mov	word ptr ss:[mr@screen_length],ax
+	mov	bx,80
+	mul	bx
+	sub	ax,80
+#3	shr	ax,1
+	mov	word ptr ss:[mr@screen_scroll],ax
+	pop	es
+	ret
+	mr@seglist	dw 0a000h,0a000h,0b000h,0b800h
+%ss mr@screen_seg dw 1 dup (?)
+%ss mr@current_page db 1 dup (?)
+%ss mr@current_fore db 1 dup (?)
+%ss mr@current_back db 1 dup (?)
+%ss mr@screen_length db 1 dup (?)
+%ss mr@screen_scroll dw 1 dup (?)
+_tty_str_direct_setup_pm:
+	mov	ax,2
+	mov	bx,word ptr ss:[mr@screen_seg]
+	int	31h
+	jc	I352
+	mov	word ptr ss:[mr@screen_seg],ax
+	ret
+I352:
+	mov	ax,10
+$errhandler
+_memsetb:
+	push	bp
+	mov	bp,sp
+	push	ax
+	push	cx
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	di,[bp+6]
+	mov	cx,[bp+4]
+#D	mov	ax,di
+#D	add	ax,cx
+#D	jc	I353
+	mov	ax,[bp+8]
+	rep	stosb
+#Z	pop	es
+	pop	di
+	pop	cx
+	pop	ax
+	pop	bp
+	ret	6
+I353:
+#DI354:
+#D	mov	ax,12
+#D$errhandler
+_farmemsetb:
+	push	bp
+	mov	bp,sp
+	push	ax
+	push	cx
+	push	di
+	push	es
+	mov	es,[bp+8]
+	mov	di,[bp+6]
+	mov	cx,[bp+4]
+#D	mov	ax,di
+#D	add	ax,cx
+#D	jc	I355
+	mov	ax,[bp+10]
+	rep	stosb
+	pop	es
+	pop	di
+	pop	cx
+	pop	ax
+	pop	bp
+	ret	8
+#DI355:
+#D	mov	ax,12
+#D$errhandler
+_memsetw:
+	push	bp
+	mov	bp,sp
+	push	ax
+	push	cx
+	push	di
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	di,[bp+6]
+	mov	cx,[bp+4]
+#D	mov	ax,di
+#D	add	ax,cx
+#D	jc	I356
+#D	add	ax,cx
+#D	jc	I356
+	mov	ax,[bp+8]
+	rep	stosw
+#Z	pop	es
+	pop	di
+	pop	cx
+	pop	ax
+	pop	bp
+	ret	6
+#DI356:
+#D	mov	ax,12
+#D$errhandler
+_farmemsetw:
+	push	bp
+	mov	bp,sp
+	push	ax
+	push	cx
+	push	di
+	push	es
+	mov	es,[bp+8]
+	mov	di,[bp+6]
+	mov	cx,[bp+4]
+#D	mov	ax,di
+#D	add	ax,cx
+#D	jc	I357
+#D	add	ax,cx
+#D	jc	I357
+	mov	ax,[bp+10]
+	rep	stosw
+	pop	es
+	pop	di
+	pop	cx
+	pop	ax
+	pop	bp
+	ret	8
+#DI357:
+#D	mov	ax,12
+#D$errhandler
+_mypath:
+	push	ax
+	push	bx
+	push	cx
+	push	si
+	push	es
+@E	push	cs
+@E	pop	es
+#E	mov	es,ds:[mr@psp]
+	mov	bx,es:[2ch]
+	mov	es,bx
+	xor	al,al
+	xor	di,di
+	mov	cx,7fffh
+I358:
+	repnz	scasb
+	scasb
+	jnz	I358
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	push	di
+	mov	cx,128
+	repnz	scasb
+	mov	bx,130
+	sub	bx,cx
+	call	_mem_alloc
+	lea	cx,[bx-3]
+	mov	[di],cx
+	pop	si
+	push	di
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	push	ds
+	push	es
+	push	ds
+	pop	es
+	pop	ds
+	rep	movsb
+	pop	ds
+	pop	di
+	pop	es
+	pop	si
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_ival_bx:
+	push	ax
+	call	_ival
+	mov	bx,ax
+	pop	ax
+	ret
+_ival:
+	push	bx
+	push	cx
+	push	dx
+	xor	cx,cx
+	mov	bx,ds:[si]
+	xor	ax,ax
+	or	bx,bx
+	jz	I363
+	lodsw
+I359:
+	lodsb
+	cmp	al,' '
+	jbe	I359
+	dec	si
+	mov	ah,ch
+	cmp	byte ptr ds:[si],'-'
+	jnz	I360
+	inc	si
+	inc	bx
+	mov	ah,1
+I360:
+	call	_mr$ivalS0
+	jc	I362
+	cmp	ah,0
+	je	I361
+	neg	cx
+	clc
+	jmp	short I362
+I361:
+	or	cx,cx
+	clc
+	jns	I362
+	stc
+I362:
+	mov	ax,cx
+I363:
+	pop	dx
+	pop	cx
+	pop	bx
+	ret
+_mr$ivalS0:
+	pushf
+	cld
+I364:
+	lodsb
+	cmp	al,'0'
+	jb	I365
+	cmp	al,'9'
+	ja	I365
+	xor	al,'0'
+	cmp	al,10
+	ja	I365
+	shl	cx,1
+	jc	I366
+	mov	dx,cx
+	shl	cx,1
+	jc	I366
+	shl	cx,1
+	jc	I366
+	add	cx,dx
+	jc	I366
+	add	cl,al
+	adc	ch,0
+	jc	I366
+	dec	bx
+	jnz	I364
+I365:
+	popf
+	clc
+	ret
+I366:
+	popf
+	stc
+	ret
+_setmode:
+%startup _graphic_setup
+%include _putcga2
+%include _getcga2
+%include _putcga4
+%include _getcga4
+%include _putcga2x
+%include _putcga4x
+%include _clscga
+	xor	ah,ah
+	cmp	ax,6
+	jz	I367
+	cmp	ax,4
+	jz	I368
+	cmp	ax,3
+	jz	I369
+	mov	ax,13
+$errhandler
+I367:
+	mov	word ptr ds:[_putpixel],offset _putcga2
+	mov	word ptr ds:[_putpixelx],offset _putcga2x
+	mov	word ptr ds:[_getpixel],offset _getcga2
+	mov	word ptr ds:[_gcls],offset _clscga
+	mov	word ptr ss:[mr@graph_seg],0b800h
+	jmp	short I370
+I368:
+	mov	word ptr ds:[_putpixel],offset _putcga4
+	mov	word ptr ds:[_putpixelx],offset _putcga4x
+	mov	word ptr ds:[_getpixel],offset _getcga4
+	mov	word ptr ds:[_gcls],offset _clscga
+	mov	word ptr ss:[mr@graph_seg],0b800h
+	jmp	short I370
+I369:
+	mov	ax,offset _nomodeset
+	mov	word ptr ds:[_putpixel],ax
+	mov	word ptr ds:[_putpixelx],ax
+	mov	word ptr ds:[_getpixel],ax
+	mov	word ptr ds:[_gcls],ax
+	jmp	short I370
+I370:
+	int	10h
+	ret
+_nomodeset:
+	mov	ax,6
+$errhandler
+_graphic_setup:
+%allocate _putpixel 2
+%allocate _getpixel 2
+%allocate _putpixelx 2
+%allocate _gcls 2
+%allocate mr@old_screen_mode 2
+%allocate mr@cga16ktable 400
+%ss mr@graph_seg dw 1 dup (?)
+%allocate mr@old_screen_length 1
+%include _nomodeset
+%include _restore_video_mode
+%cleanup _restore_video_mode
+	push	es
+	mov	ax,offset _nomodeset
+	mov	word ptr ds:[_putpixel],ax
+	mov	word ptr ds:[_putpixelx],ax
+	mov	word ptr ds:[_getpixel],ax
+	mov	word ptr ds:[_gcls],ax
+	mov	word ptr ss:[mr@graph_seg],0b800h
+	mov	ax,40h
+	mov	es,ax
+	mov	al,es:[84h]
+	mov	byte ptr ds:[mr@old_screen_length],al
+	mov	ah,0fh
+	int	10h
+	xor	ah,ah
+	mov	word ptr ds:[mr@old_screen_mode],ax
+	mov	di,offset mr@cga16ktable
+	push	ds
+	pop	es
+	xor	ax,ax
+	mov	cx,100
+I371:
+	stosw
+	push	ax
+	add	ax,2000h
+	stosw
+	pop	ax
+	add	ax,80
+	loop	I371
+	pop	es
+	ret
+_restore_video_mode:
+	mov	ax,word ptr ds:[mr@old_screen_mode]
+	int	10h
+	cmp	word ptr ds:[mr@old_screen_mode],3
+	jz	I372
+	ret
+I372:
+	mov	al,byte ptr ds:[mr@old_screen_length]
+	cmp	al,42
+	jz	I373
+	cmp	al,49
+	jz	I374
+	ret
+I373:
+	mov	ax,1112h
+	mov	bl,0
+	int	10h
+	mov	ax,40h
+	mov	es,ax
+	mov	dx,es:[63h]
+	mov	ax,060Ah
+	out	dx,ax
+	mov	ax,0bh
+	out	dx,ax
+	mov	al,12h
+	mov	bl,20h
+	int	10h
+	ret
+I374:
+	mov	ax,1202h
+	mov	bl,30h
+	int	10h
+	mov	ax,3
+	int	10h
+	mov	ax,1112h
+	mov	bl,0
+	int	10h
+	ret
+_clscga:
+	push	ax
+	push	cx
+	push	di
+	push	es
+	mov	es,word ptr ss:[mr@graph_seg]
+	xor	di,di
+	xor	ax,ax
+	mov	cx,1FFEh
+	rep	stosw
+	pop	es
+	pop	di
+	pop	cx
+	pop	ax
+	ret
+_putcga4:
+	cmp	cx,319
+	ja	I375
+	cmp	dx,199
+	ja	I375
+	push	ax
+	push	bx
+	push	cx
+	push	es
+	mov	es,word ptr ss:[mr@graph_seg]
+	mov	bx,dx
+	shl	bx,1
+	mov	bx,word ptr ds:[mr@cga16ktable+bx]
+	mov	ah,cl
+@1	shr	cx,1
+@1	shr	cx,1
+#1	shr	ax,2
+	add	bx,cx
+	not	ah
+	and	ah,3
+	shl	ah,1
+	mov	cl,ah
+	and	al,3
+	rol	al,cl
+	mov	ah,0fch
+	rol	ah,cl
+	mov	cl,es:[bx]
+	and	cl,ah
+	or	cl,al
+	mov	es:[bx],cl
+	pop	es
+	pop	cx
+	pop	bx
+	pop	ax
+I375:
+	ret
+_getcga4:
+	cmp	cx,639
+	ja	I376
+	cmp	dx,199
+	ja	I376
+	push	bx
+	push	cx
+	push	es
+	mov	es,word ptr ss:[mr@graph_seg]
+	mov	bx,dx
+	shl	bx,1
+	mov	bx,word ptr ds:[mr@cga16ktable+bx]
+	mov	ax,cx
+@1	shr	ax,1
+@1	shr	ax,1
+#1	shr	ax,2
+	add	bx,ax
+	not	cl
+	and	cl,3
+	shl	cl,1
+	mov	al,es:[bx]
+	ror	al,cl
+	and	ax,3
+	pop	es
+	pop	cx
+	pop	bx
+	ret
+I376:
+	mov	ax,6
+$errhandler
+_putcga2:
+	cmp	cx,639
+	ja	I377
+	cmp	dx,199
+	ja	I377
+	push	ax
+	push	bx
+	push	cx
+	push	es
+	mov	es,word ptr ss:[mr@graph_seg]
+	mov	bx,dx
+	shl	bx,1
+	mov	bx,word ptr ds:[mr@cga16ktable+bx]
+	mov	ah,cl
+@1	shr	cx,1
+@1	shr	cx,1
+@1	shr	cx,1
+#1	shr	cx,3
+	add	bx,cx
+	not	ah
+	and	ah,7
+	mov	cl,ah
+	and	al,1
+	rol	al,cl
+	mov	ah,0feh
+	rol	ah,cl
+	mov	cl,es:[bx]
+	and	cl,ah
+	or	cl,al
+	mov	es:[bx],cl
+	pop	es
+	pop	cx
+	pop	bx
+	pop	ax
+I377:
+	ret
+_getcga2:
+	cmp	cx,639
+	ja	I378
+	cmp	dx,199
+	ja	I378
+	push	bx
+	push	cx
+	push	es
+	mov	es,word ptr ss:[mr@graph_seg]
+	mov	bx,dx
+	shl	bx,1
+	mov	bx,word ptr ds:[mr@cga16ktable+bx]
+	mov	ax,cx
+@1	shr	ax,1
+@1	shr	ax,1
+@1	shr	ax,1
+#1	shr	ax,3
+	add	bx,ax
+	not	cl
+	and	cl,7
+	mov	al,es:[bx]
+	ror	al,cl
+	and	ax,1
+	pop	es
+	pop	cx
+	pop	bx
+	ret
+I378:
+	mov	ax,6
+$errhandler
+_putcga4x:
+	cmp	cx,319
+	ja	I379
+	cmp	dx,199
+	ja	I379
+	push	ax
+	push	bx
+	push	cx
+	push	es
+	mov	es,word ptr ss:[mr@graph_seg]
+	mov	bx,dx
+	shl	bx,1
+	mov	bx,word ptr ds:[mr@cga16ktable+bx]
+	mov	ah,cl
+@1	shr	cx,1
+@1	shr	cx,1
+#1	shr	ax,2
+	add	bx,cx
+	not	ah
+	and	ah,3
+	shl	ah,1
+	mov	cl,ah
+	and	al,3
+	rol	al,cl
+	xor	es:[bx],cl
+	pop	es
+	pop	cx
+	pop	bx
+	pop	ax
+I379:
+	ret
+_putcga2x:
+	cmp	cx,639
+	ja	I380
+	cmp	dx,199
+	ja	I380
+	push	ax
+	push	bx
+	push	cx
+	push	es
+	mov	es,word ptr ss:[mr@graph_seg]
+	mov	bx,dx
+	shl	bx,1
+	mov	bx,word ptr ds:[mr@cga16ktable+bx]
+	mov	ah,cl
+@1	shr	cx,1
+@1	shr	cx,1
+@1	shr	cx,1
+#1	shr	cx,3
+	add	bx,cx
+	not	ah
+	and	ah,7
+	mov	cl,ah
+	and	al,1
+	rol	al,cl
+	xor	es:[bx],al
+	pop	es
+	pop	cx
+	pop	bx
+	pop	ax
+I380:
+	ret
+_mfosinit:
+	push	bp
+	mov	bp,sp
+	push	bx
+	push	cx
+	push	si
+	push	es
+	mov	ax,[bp+4]
+	test	ax,ax
+	jnz	I381
+	jmp	short I383
+I381:
+	dec	ax
+	mov	dx,ax
+	mov	ax,0400h
+	xor	bx,bx
+	int	14h
+	cmp	ax,1954h
+	jz	I382
+	mov	ax,-1
+	jmp	I383
+I382:
+	mov	ax,1000h
+	int	14h
+	mov	ax,1400h
+	int	14h
+	mov	ax,[bp+4]
+I383:
+	pop	es
+	pop	si
+	pop	cx
+	pop	bx
+	pop	bp
+	ret	2
+_mfoscarrier:
+	push	bp
+	mov	bp,sp
+	push	dx
+	mov	ax,[bp+4]
+	test	ax,ax
+	jz	I384
+	mov	dx,ax
+	dec	dx
+	mov	ah,03h
+	int	14h
+	and	ax,128
+	jnz	I384
+	pop	dx
+	pop	bp
+	ret	2
+I384:
+	mov	ax,-1
+	pop	dx
+	pop	bp
+	ret	2
+_mfosdatawaiting:
+	push	bp
+	mov	bp,sp
+	push	dx
+	mov	ax,[bp+4]
+	test	ax,ax
+	jz	I385
+	mov	dx,ax
+	dec	dx
+	mov	ah,03h
+	int	14h
+	and	ax,256
+	jz	I385
+	mov	ax,-1
+I385:
+	pop	dx
+	pop	bp
+	ret	2
+_mfosdeinit:
+	push	bp
+	mov	bp,sp
+	push	ax
+	push	dx
+	mov	ax,[bp+4]
+	test	ax,ax
+	jz	I386
+	mov	dx,ax
+	dec	dx
+	mov	ah,05h
+	int	14h
+I386:
+	pop	dx
+	pop	ax
+	pop	bp
+	ret	2
+_mfosflush:
+	push	bp
+	mov	bp,sp
+	push	ax
+	push	dx
+	mov	ax,[bp+4]
+	test	ax,ax
+	jz	I387
+	mov	dx,ax
+	dec	dx
+	mov	ah,08h
+	int	14h
+I387:
+	pop	dx
+	pop	ax
+	pop	bp
+	ret	2
+_mfosgetchar:
+	push	bp
+	mov	bp,sp
+	push	dx
+	mov	ax,[bp+4]
+	test	ax,ax
+	jz	I388
+	mov	dx,ax
+	dec	dx
+	mov	ah,03h
+	int	14h
+	and	ax,256
+	jz	I388
+	mov	ah,02h
+	int	14h
+	pop	dx
+	pop	bp
+	ret	2
+I388:
+	mov	ax,-1
+	pop	dx
+	pop	bp
+	ret	2
+_mfostx:
+	push	bp
+	mov	bp,sp
+	push	ax
+	push	cx
+	push	dx
+	push	si
+	push	di
+#Z	push	es
+	mov	ax,[bp+6]
+	test	ax,ax
+	jz	I390
+	mov	si,[bp+4]
+	mov	cx,[si]
+	jcxz	I390
+	lea	di,[si+2]
+#Z	push	ds
+#Z	pop	es
+I389:
+	mov	ah,19h
+	int	14h
+	sub	cx,ax
+	add	di,ax
+	jcxz	I390
+	call	_timeslice
+	jmp	short I389
+I390:
+#Z	pop	es
+	pop	di
+	pop	si
+	pop	dx
+	pop	cx
+	pop	ax
+	pop	bp
+	ret	4
+_get_day:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	bx,5
+	call	_mem_alloc
+	push	di
+	mov	word ptr [di],3
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	mov	ah,2ah
+	int	21h
+	mov	bl,3
+	mul	bl
+	mov	bx,ax
+	xor	bh,bh
+	add	bx,offset mr@daylist
+	mov	ax,word ptr cs:[bx]
+	stosw
+	mov	al,byte ptr cs:[bx+2]
+	stosb
+	pop	di
+#Z	pop	es
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+mr@daylist:
+	db	'SunMonTueWedThuFriSat'
+_get_date:
+%bundle dateblk
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	bx,13
+	call	_mem_alloc
+	push	di
+	mov	ax,11
+	stosw
+	mov	ah,2ah
+	int	21h
+	mov	byte ptr ds:[b_DATEBLK_DAY],dl
+	mov	byte ptr ds:[b_DATEBLK_MONTH],dh
+	mov	word ptr ds:[w_DATEBLK_YEAR],cx
+	mov	byte ptr ds:[b_DATEBLK_DOW],al
+	mov	al,dl
+	call	_dtS1
+	mov	al,'-'
+	stosb
+	mov	al,dh
+	dec	al
+	mov	dh,3
+	mul	dh
+	mov	bx,ax
+	xor	bh,bh
+	add	bx,offset mr@monthlist
+	mov	ax,cs:[bx]
+	stosw
+	mov	al,cs:[bx+2]
+	stosb
+	mov	al,'-'
+	stosb
+	sub	cx,1900
+	cmp	cl,100
+	mov	ch,13h
+	jc	I391
+	sbb	cl,100
+	inc	ch
+I391:
+	mov	al,ch
+	call	_dtS1
+	mov	al,cl
+	call	_dtS1
+	pop	di
+#Z	pop	es
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+mr@monthlist:
+	db	'JanFebMarAprMayJunJulAugSepOctNovDec'
+_dtS1:
+	aam
+	or	ax,3030h
+	xchg	ah,al
+	stosw
+	ret
+_get_time:
+%bundle timeblk
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+#Z	push	es
+#Z	push	ds
+#Z	pop	es
+	mov	bx,10
+	call	_mem_alloc
+	push	di
+	mov	word ptr [di],8
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+	mov	ah,2ch
+	int	21h
+	mov	byte ptr ds:[b_TIMEBLK_HOUR],ch
+	mov	byte ptr ds:[b_TIMEBLK_MINUTE],cl
+	mov	byte ptr ds:[b_TIMEBLK_SECOND],dh
+	mov	byte ptr ds:[b_TIMEBLK_SEC100],dl
+	mov	al,ch
+	call	_dtS1
+	mov	al,':'
+	stosb
+	mov	al,cl
+	call	_dtS1
+	mov	al,':'
+	stosb
+	mov	al,dh
+	call	_dtS1
+	pop	di
+#Z	pop	es
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_tty_str_bios:
+%startup _tty_str_bios_setup
+@1	push	ax
+@1	push	bx
+@1	push	cx
+@1	push	dx
+@1	push	si
+@1	push	ds
+#1	push	ds
+#1	pusha
+	mov	bl,byte ptr ss:[mr@current_back]
+@1	shl	bl,1
+@1	shl	bl,1
+@1	shl	bl,1
+@1	shl	bl,1
+#1	shl	bl,4
+	or	bl,byte ptr ss:[mr@current_fore]
+	mov	bh,byte ptr ss:[mr@current_page]
+	mov	si,[di]
+	or	si,si
+	jz	I395
+@S	inc	di
+@S	inc	di
+#S	add	di,2
+I392:
+	mov	al,[di]
+	cmp	al,32
+	jb	I396
+	mov	ah,09h
+	mov	cx,1
+	int	10h
+	mov	ah,03h
+	int	10h
+	inc	dl
+	cmp	dl,80
+	jnz	I393
+	call	_tty_bios_cr
+	mov	ah,03h
+	int	10h
+	jmp	short I394
+I393:
+	mov	ah,02h
+	int	10h
+I394:
+	inc	di
+	dec	si
+	jnz	I392
+I395:
+@1	pop	ds
+@1	pop	si
+@1	pop	dx
+@1	pop	cx
+@1	pop	bx
+@1	pop	ax
+#1	popa
+#1	pop	ds
+	ret
+I396:
+	mov	ah,02h
+	mov	dl,al
+	int	21h
+	jmp	short I394
+%ss mr@current_page: db ?
+%ss mr@current_fore: db ?
+%ss mr@current_back: db ?
+%ss mr@screen_length: db ?
+_tty_str_bios_setup:
+	push	ax
+	push	es
+	xor	ax,ax
+	mov	byte ptr ss:[mr@current_page],al
+	mov	byte ptr ss:[mr@current_back],al
+	mov	byte ptr ss:[mr@screen_length],25
+	mov	word ptr ss:[mr@current_fore],7
+	mov	al,040h
+	mov	es,ax
+	mov	al,byte ptr es:[084h]
+	inc	ax
+	mov	word ptr ss:[mr@screen_length],ax
+	pop	es
+	pop	ax
+	ret
+_tty_scroll:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	mov	bh,byte ptr ss:[mr@current_back]
+@1	shl	bh,1
+@1	shl	bh,1
+@1	shl	bh,1
+@1	shl	bh,1
+#1	shl	bh,4
+	or	bh,byte ptr ss:[mr@current_fore]
+	xor	cx,cx
+	mov	dh,byte ptr ss:[mr@screen_length]
+	mov	dl,79
+	mov	ah,06h
+	int	10h
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_tty_bios_cr:
+	push	ax
+	push	bx
+	push	cx
+	push	dx
+	mov	ah,03h
+	mov	bh,byte ptr ss:[mr@current_page]
+	int	10h
+	inc	dh
+	mov	ah,02h
+	int	10h
+	cmp	dh,byte ptr ss:[mr@screen_length]
+	jb	I397
+	mov	al,01
+	call	_tty_scroll
+	mov	dh,byte ptr ss:[mr@screen_length]
+	dec	dh
+I397:
+	mov	ah,02h
+	xor	dl,dl
+	int	10h
+	pop	dx
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_curp_get:
+	push	ax
+	push	bx
+	push	cx
+	mov	ah,03h
+	mov	bh,byte ptr ss:[mr@current_page]
+	int	10h
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_curp_set:
+	push	ax
+	push	bx
+	push	cx
+	mov	ah,02h
+	mov	bh,byte ptr ss:[mr@current_page]
+	int	10h
+	pop	cx
+	pop	bx
+	pop	ax
+	ret
+_cls:
+#@%startup _tty_str_direct_setup
+#@%startuppm _tty_str_direct_setup_pm
+@@	push	ax
+@@	push	bx
+@@	push	cx
+@@	push	dx
+@@	push	bp
+@@	mov	bh,byte ptr ss:[mr@current_back]
+@@@1	shl	bh,1
+@@@1	shl	bh,1
+@@@1	shl	bh,1
+@@@1	shl	bh,1
+@@#1	shl	bh,4
+@@	or	bh,byte ptr ss:[mr@current_fore]
+@@	xor	cx,cx
+@@	mov	dh,byte ptr ss:[mr@screen_length]
+@@	mov	dl,79
+@@	mov	ax,0600h
+@@	int	10h
+@@	mov	ah,02h
+@@	mov	bh,byte ptr ss:[mr@current_page]
+@@	xor	dx,dx
+@@	int	10h
+@@	pop	bp
+@@	pop	dx
+@@	pop	cx
+@@	pop	bx
+@@	pop	ax
+#@	push	ax
+#@	push	bx
+#@	push	cx
+#@	push	dx
+#@	push	di
+#@	push	bp
+#@	push	es
+#@	mov	es,word ptr ss:[mr@screen_seg]
+#@	mov	ah,byte ptr ss:[mr@current_back]
+#@@1	shl	ah,1
+#@@1	shl	ah,1
+#@@1	shl	ah,1
+#@@1	shl	ah,1
+#@#1	shl	ah,4
+#@	mov	bl,byte ptr ss:[mr@current_fore]
+#@	cmp	bl,16
+#@	jb	I398
+#@	or	ah,80h
+#@	and	bl,0fh
+#@I398:
+#@	or	ah,bl
+#@	xor	di,di
+	mov	al,20h
+#@#3	mov	bx,ax
+#@#3	shl	eax,16
+#@#3	or	ax,bx
+#@	mov	cx,word ptr ss:[mr@screen_scroll]
+#@@3	rep	stosw
+#@#3	rep	stosd
+#@	mov	cx,80
+#@	rep	stosw
+#@	mov	ah,02h
+#@	mov	bh,byte ptr ss:[mr@current_page]
+#@	xor	dx,dx
+#@	int	10h
+#@	pop	es
+#@	pop	bp
+#@	pop	di
+#@	pop	dx
+#@	pop	cx
+#@	pop	bx
+#@	pop	ax
+	ret
+_chknullptr:
+	cmp	word ptr ds:[0],0
+	jz	I399
+	call	_cprint
+	db 13,10,'Program error: null pointer assignment',0
+I399:
+	ret
+_end_of_lib:

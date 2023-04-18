@@ -1,0 +1,46 @@
+                                       Jelly-Bean Software Development
+                                                           19-Jul-1995
+
+                     BUG REPORT: MOONROCK COMPILER
+                            Version 0.10.b0
+
+======================================================================
+
+Concern:
+
+   "Incorrect functioning of instr() function"
+
+Problem:
+
+   INSTR <str1> <str2>
+
+   The _str_instr function works by first scanning str1 for the *first*
+   character of str2. If a match is found then further comparison with
+   str2 is done.
+
+   The bug is that the AL register is overwritten during this further
+   comparison; therefore if the *first* character match is not the
+   *full* str2 match, the value returned by instr() will be erratic
+   (usually 0).
+
+   The following program demonstrates this:
+
+      a% = instr("AA BB CC DD EE FF GG","EE")
+      print a% + "\n"     ' a% is 13 (correct)
+      a% = instr("hello, how are you today?", "ow")
+      print a%            ' a% is 0 (incorrect: should be 9)
+
+Symptoms:
+
+   No immediately obvious symptoms.
+
+Short Term Solution:
+
+   None.
+
+======================================================================
+
+Regards,
+Rowan Crowe                                          3:635/727@fidonet
+Jelly-Bean Software Development       rowan@jelly.freeway.dialix.oz.au
+

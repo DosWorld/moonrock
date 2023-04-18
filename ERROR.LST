@@ -1,0 +1,118 @@
+      Moonrock errors (fatal)
+      -----------------------
+        1  MCB corrupt
+             Something has corrupted MoonRock's memory structures.
+
+        2  invalid pointer to free
+             Internal error, or corrupted memory.
+
+        3  overflow on calculation (debug only)
+             A calculation has set the overflow processor status. The
+             following will generate an overflow error if compiled with
+             the /D option:
+                a% = 10
+                a% = a% + 32767
+
+        4  invalid file handle
+             An unknown file handle has been referenced.
+
+        5  out of near memory
+             The memory manager has insufficient free space to allocate
+             the requested block of memory.
+
+        6  invalid function call
+             The 'catch all' error. Happens in many situations,
+             including:
+               * Attempting to CPUT or CGET a character off the screen
+               * Attempting to save too many screens
+               * Trying to put a pixel in a text mode
+               * Trying to put or get a pixel that is off the screen
+
+        7  array element out of bounds (debug only)
+             The program has attempted to access an array element higher
+             than was dimensioned.
+
+        8  read past end of file
+             Attempt to read data beyond the end of the file.
+
+       10  error entering protected mode (DPMI only)
+             A DPMI host was detected, but there was a problem entering
+             protected mode.
+
+       11  divide overflow / divide by zero (debug only)
+             Your program has attempted to divide by zero, or the result
+             of the division is too large to fit within a word.
+
+       12  segment boundary overrun detected (debug only)
+             Your program has attempted to read or write over the
+             boundary of a segment. This error (when not checked for)
+             often causes exception #13.
+
+       13  unsupported screen mode
+             Tried to set an unknown screen mode.
+
+       ..  memory allocation error
+             Memory initialisation at startup failed, due to corrupt
+             DOS memory blocks, or insufficient memory.
+
+       ..  program error: null pointer assignment
+             A pointer was referenced (memory written to) but was not
+             initialised with a pointer value. The following code
+             demonstrates this:
+
+                begin def
+                pointer word word1~
+                begin code
+                [word1~] = 1 ' pointer not initialised
+
+        .. program error: exception occurred in _atexit
+             A runtime error occurred in a procedure called by atexit.
+
+
+      DOS errors:
+      -----------
+      100  unknown critical error
+      101  function number invalid
+      102  file not found
+      103  path not found
+      104  too many open files (no handles available)
+      105  access denied
+      106  invalid handle
+      107  DOS memory control block destroyed
+      108  insufficient memory
+      109  memory block address invalid
+      110  environment invalid (usually >32K in length)
+      111  format invalid
+      112  access code invalid
+      113  data invalid
+      115  invalid drive
+      116  attempted to remove current directory
+      117  not same device
+      118  no more files
+
+
+      DOS critical errors:
+      --------------------
+      119  write-protection violation attempted
+      120  unknown unit for driver
+      121  drive not ready
+      122  unknown command given to driver
+      123  data error (bad CRC)
+      124  bad device driver request structure length
+      125  seek error
+      126  unknown media type
+      127  sector not found
+      128  printer out of paper
+      129  write fault
+      130  read fault
+      131  general failure
+      132  (DOS 3+) sharing violation
+      133  (DOS 3+) lock violation
+      134  invalid disk change
+      135  (DOS 3+) FCB unavailable
+      136  (DOS 3+) sharing buffer overflow
+      137  (DOS 4+) code page mismatch
+      138  (DOS 4+) out of input
+      139  (DOS 4+) insufficient disk space
+
+--------------------------------------------------------------------------

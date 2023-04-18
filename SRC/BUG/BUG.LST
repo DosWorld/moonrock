@@ -1,0 +1,33 @@
+--------------------------------------------------------------------------
+Fixed bugs                                                       MRC v0.17
+--------------------------------------------------------------------------
+
+- mypath had a stray null (0) appended to it
+- fkill() with string constant would sometimes cause "invalid pointer
+  to free" runtime error
+- using a doubleword variable in a FOR...NEXT loop produced invalid
+  label format (no preceding 'LL' before the unique number)
+- using a doubleword variable in a FOR...NEXT loop with 386+ code
+  generation enabled produced invalid memory reference (missing right
+  square bracket)
+- replaced random number algorithm AGAIN
+- "db ?" replaced with "db 1 dup (?)" (and dw, dd etc) to keep ArrowSoft
+  assembler and MASM from assembling unitialised data as "db 0" when
+  compiling for EXE output
+  resultant executable should be at least 1k smaller
+- FOR...NEXT with byte variable wrote a word rather than byte, and thus
+  corrupted the next byte location
+- FOR...NEXT with byte variable loop code generation tightened (no
+  conversion to word)
+- array operations with byte variable as element pointer left top 8 bits
+  of 16 bit pointer undefined -- under some circumstances this may
+  corrupt other variables or string memory
+- language dependent OBJ production did not include critical error
+  handler in output ASM, which could therefore not be assembled without
+  error
+- during compile, current file name was incorrectly reported if include
+  files were nested more than 2 files deep
+- _str_copy_qb function (convert QB string to MR string) trashed ES
+  register
+- fossil routines enabled ^C/^K checking rather than disabling it, which
+  meant inbound data was not fully 8 bit transparent

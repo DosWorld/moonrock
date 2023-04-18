@@ -1,0 +1,56 @@
+                                       Jelly-Bean Software Development
+                                                           20-Aug-1995
+
+                     BUG REPORT: MOONROCK COMPILER
+                            Version 0.12.b0
+
+======================================================================
+
+Concern:
+
+   "Bug in hash1 and hash2 functions"
+
+Problem:
+
+   Both the hash1 and hash2 algorithms will sometimes generate identical
+   results from slightly different strings. The following program
+   demonstrates this:
+
+
+        input (a$, 20)
+        while a$ <> ""
+          a% = hash1(a$)
+          print "\nValue is: " + hex16(a%) +"\n"
+          input (a$, 20)
+        wend
+
+   Run this program, and enter (without the quotes)
+
+   "print"
+   "print "
+
+   Note that both the values returned are the same.
+
+   This is due to an error in initialising a starting pointer: the
+   algorithm incorrectly processes part of the string size counter, then
+   the string less 2 bytes, rather than only the string itself.
+
+   This may or may not be a serious bug, depending on the application.
+
+Short Term Solution:
+
+   As the bug has now been fixed, hash1 and hash2 will return different
+   numbers to the hash1 and hash2 functions in MoonRock v0.12.b0. Do not
+   use hash results as constants (defined at compile time) in your
+   program.
+
+   Runtime generated hash tables are fine, but remember that under some
+   circumstances identical hash values will be returned, for very
+   similar strings.
+
+======================================================================
+
+Regards,
+Rowan Crowe                                          3:635/727@fidonet
+Jelly-Bean Software Development       rowan@jelly.freeway.dialix.oz.au
+

@@ -1,0 +1,82 @@
+--------------------------------------------------------------------------
+Fixed bugs                                                       MRC v0.17
+--------------------------------------------------------------------------
+
+- mypath had a stray null (0) appended to it
+- fkill() with string constant would sometimes cause "invalid pointer
+  to free" runtime error
+- using a doubleword variable in a FOR...NEXT loop produced invalid
+  label format (no preceding 'LL' before the unique number)
+- using a doubleword variable in a FOR...NEXT loop with 386+ code
+  generation enabled produced invalid memory reference (missing right
+  square bracket)
+- replaced random number algorithm AGAIN
+- "db ?" replaced with "db 1 dup (?)" (and dw, dd etc) to keep ArrowSoft
+  assembler and MASM from assembling unitialised data as "db 0" when
+  compiling for EXE output
+  resultant executable should be at least 1k smaller
+- FOR...NEXT with byte variable wrote a word rather than byte, and thus
+  corrupted the next byte location
+- FOR...NEXT with byte variable loop code generation tightened (no
+  conversion to word)
+- array operations with byte variable as element pointer left top 8 bits
+  of 16 bit pointer undefined -- under some circumstances this may
+  corrupt other variables or string memory
+- language dependent OBJ production did not include critical error
+  handler in output ASM, which could therefore not be assembled without
+  error
+- during compile, current file name was incorrectly reported if include
+  files were nested more than 2 files deep
+- _str_copy_qb function (convert QB string to MR string) trashed ES
+  register
+- fossil routines enabled ^C/^K checking rather than disabling it, which
+  meant inbound data was not fully 8 bit transparent
+- some casting bugs fixed, if optimisation was enabled (the default), a
+  word would not always be correctly casted to a doubleword in certain
+  expressions
+- if val() had a negative number the conversion used an undefined extra
+  digit, resulting in an incorrect answer under some circumstances
+
+
+--------------------------------------------------------------------------
+Fixed bugs                                                       MRC v0.50
+--------------------------------------------------------------------------
+
+- fosdatawaiting returned an inconsistent result if a local port was
+  used
+- atexit() reported that the sub name was an "unknown keyword or
+  variable", resulting in a failed compile
+- code generation with var = var * const was broken, if var was the same
+  variable
+- optimisation would still be performed between two "adjacent" compiled
+  lines if there was inline assembler between them
+- inline assembler parser didn't recognise byte '@' variable types
+- inline assembler parser didn't recognise bundle elements correctly
+- int% = int% / const was broken and didn't save result to int%
+- if the last line of a file did not contain CR/LF it was not read by
+  finput
+- some strange optimisations occurred if a pointer was assigned and
+  then referenced in the next line of code, eg:
+      dword1~ = i% shl 2           ' assign
+      fred& = [dword1~]            ' reference
+- in some circumstances two null strings when compared were not
+  considered equal
+- a memory allocation error while allocating memory for FAR or HUGE
+  arrays at startup printed junk due to the data segment being set
+  incorrectly
+- optimisation error: for the line string$[ptr%] = "something", the
+  register used as an array pointer was trashed when needed later
+- str with a byte parameter excluded closing square bracket from ASM
+  output
+- varptr() referencing a string array element produced strange code
+- case <const> after select case <byte variable> did a doubleword compare
+  instead of byte compare
+- null strings with the exact maximum field size read into a bundle from
+  disk were actually truncated to one byte less
+- int1& = int1& / int2& code generation broken for 386+ compile
+- doubleword parameters to subs were pushed onto the stack word low then
+  word high instead of the more conventional word high then word low
+  order. this caused problems with subs that had doubleword parameters,
+  when compiled for 386+
+- long& = long& + byte@ and long& = long& - byte@ code generation broken
+  for 386+ compile, missing a register reference

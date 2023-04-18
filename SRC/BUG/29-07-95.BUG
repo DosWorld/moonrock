@@ -1,0 +1,37 @@
+                                       Jelly-Bean Software Development
+                                                           29-Jul-1995
+
+                     BUG REPORT: MOONROCK COMPILER
+                            Version 0.10.b0
+
+======================================================================
+
+Concern:
+
+   "Incorrect segment usage with instr(), space(), null() functions"
+
+Problem:
+
+   The functions instr(), space(), and null() incorrectly assume that DS
+   is the default segment for STOSB/STOSW/SCASB when ES is actually the
+   default segment. This results in writes to (STOSB/STOSW), or scans
+   from (SCASB) possibly random memory locations.
+
+Symptoms:
+
+   Strange behaviour of the above functions.
+
+   Under most circumstances this bug will not be noticed, as ES is
+   normally set to the same value as DS. However, array operations will
+   change the value of ES.
+
+Short Term Solution:
+
+   Use repstr() instead of space() and null(); no solution for instr().
+
+======================================================================
+
+Regards,
+Rowan Crowe                                          3:635/727@fidonet
+Jelly-Bean Software Development       rowan@jelly.freeway.dialix.oz.au
+
